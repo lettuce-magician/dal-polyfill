@@ -18,7 +18,7 @@ function userdata.__call(self)
 	error(`attempt to call a {typeof(self)} value`)
 end
 
-local function arithmeticError(metamethod: string, a, b)
+local function arithmeticError(metamethod, a, b)
 	local aType = typeof(a)
 	local bType = typeof(b)
 	if aType == bType then
@@ -70,6 +70,18 @@ end
 
 function userdata.__concat(a, b)
 	error(`attempt to concatenate {typeof(a)} with {typeof(b)}`)
+end
+
+function userdata.__tostring(self)
+	local mt = getmetatable(self)
+	setmetatable(self :: any, nil)
+	local display = "userdata: " .. tostring(self):sub(8)
+	setmetatable(self :: any, mt)
+	return display
+	-- setmetatable(self :: any, nil)
+	-- local display = "userdata: " .. tostring(self):sub(8)
+	-- setmetatable(self :: any, userdata)
+	-- return display
 end
 
 nativetypes[userdata] = "userdata"
