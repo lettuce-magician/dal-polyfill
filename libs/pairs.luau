@@ -1,11 +1,13 @@
 local djb2 = require("./djb2")
 local frozentables = require("./frozentables")
+local privatekey = require("./privatekey")
+local typeof = require("./typeof")
 
 return {
-	withHash = (function(t)
+	withHash = (function(t: {})
 		local frozen = frozentables[t]
 		if frozen then
-			t = frozen[2]
+			t = frozen[privatekey]
 		end
 
 		local keys = {}
@@ -41,8 +43,8 @@ return {
 	withoutHash = (function(t)
 		local frozen = frozentables[t]
 		if frozen then
-			t = frozen[2]
+			t = frozen[privatekey]
 		end
 		return pairs(t)
-	end :: any) :: typeof(pairs)
+	end :: any) :: typeof(pairs),
 }
