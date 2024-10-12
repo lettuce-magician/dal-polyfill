@@ -1,12 +1,13 @@
 --[[
     Implemented as described here:
     http://flafla2.github.io/2014/08/09/perlinnoise.html
-]]--
+]]
+--
 
-local bit32 = require("./bit32") :: typeof(bit32)
 local floor = math.floor
 local band = bit32.band
 
+-- stylua: ignore
 local kPerlinHash = {
 	151, 160, 137, 91,  90,  15,  131, 13,  201, 95,  96,  53,  194, 233, 7,   225, 140, 36,  103, 30,  69,  142, 8,   99,  37,  240, 21,  10,  23,
     190, 6,   148, 247, 120, 234, 75,  0,   26,  197, 62,  94,  252, 219, 203, 117, 35,  11,  32,  57,  177, 33,  88,  237, 149, 56,  87,  174, 20,
@@ -20,89 +21,82 @@ local kPerlinHash = {
 }
 
 local kPerlinGrad = {
-    {1, 1, 0},
-    {-1, 1, 0},
-    {1, -1, 0},
-    {-1, -1, 0},
-    {1, 0, 1},
-    {-1, 0, 1},
-    {1, 0, -1},
-    {-1, 0, -1},
-    {0, 1, 1},
-    {0, -1, 1},
-    {0, 1, -1},
-    {0, -1, -1},
-    {1, 1, 0},
-    {0, -1, 1},
-    {-1, 1, 0},
-    {0, -1, -1}
+	{ 1, 1, 0 },
+	{ -1, 1, 0 },
+	{ 1, -1, 0 },
+	{ -1, -1, 0 },
+	{ 1, 0, 1 },
+	{ -1, 0, 1 },
+	{ 1, 0, -1 },
+	{ -1, 0, -1 },
+	{ 0, 1, 1 },
+	{ 0, -1, 1 },
+	{ 0, 1, -1 },
+	{ 0, -1, -1 },
+	{ 1, 1, 0 },
+	{ 0, -1, 1 },
+	{ -1, 1, 0 },
+	{ 0, -1, -1 },
 }
 
 local function perlin_grad(hash, x, y, z): number
-    local g = kPerlinGrad[bit32.band(hash, 15)]
-	return g[0] * x + g[1] * y + g[2] * z
+	local g = kPerlinGrad[bit32.band(hash, 15) + 1]
+	return g[1] * x + g[2] * y + g[3] * z
 end
 
 local function perlin_fade(t: number): number
-    return t * t * t * (t * (t * 6 - 15) + 10)
+	return t * t * t * (t * (t * 6 - 15) + 10)
 end
 
 local function perlin_lerp(t: number, a: number, b: number): number
-    return a + t * (b - a)
+	return a + t * (b - a)
 end
 
-return function(x: number, y: number, z: number)
-    y = y or 0
-    z = z or 0
+return function(x: number, y0: number?, z0: number?)
+	local y = y0 or 0
+	local z = z0 or 0
 
-    local xi = band(math.floor(x),255)
-    local yi = band(math.floor(y),255)
-    local zi = band(math.floor(z),255)
+	local xi = band(math.floor(x), 255)
+	local yi = band(math.floor(y), 255)
+	local zi = band(math.floor(z), 255)
 
-    x = x - floor(x)
-    y = y - floor(y)
-    z = z - floor(z)
+	x = x - floor(x)
+	y = y - floor(y)
+	z = z - floor(z)
 
-    local u = perlin_fade(x)
-    local v = perlin_fade(y)
-    local w = perlin_fade(z)
+	local u = perlin_fade(x)
+	local v = perlin_fade(y)
+	local w = perlin_fade(z)
 
-    local p = kPerlinHash
-    local A, AA, AB, AAA, ABA, AAB, ABB, B, BA, BB, BAA, BBA, BAB, BBB
-    A   = p[xi  ] + yi
-    AA  = p[A   ] + zi
-    AB  = p[A+1 ] + zi
-    AAA = p[ AA ]
-    ABA = p[ AB ]
-    AAB = p[ AA+1 ]
-    ABB = p[ AB+1 ]
+	local p = kPerlinHash
+	local A, AA, AB, AAA, ABA, AAB, ABB, B, BA, BB, BAA, BBA, BAB, BBB
+	A = p[xi + 1] + yi
+	AA = p[A + 1] + zi
+	AB = p[A + 1 + 1] + zi
+	AAA = p[AA + 1]
+	ABA = p[AB + 1]
+	AAB = p[AA + 1 + 1]
+	ABB = p[AB + 1 + 1]
 
-    B   = p[xi+1] + yi
-    BA  = p[B   ] + zi
-    BB  = p[B+1 ] + zi
-    BAA = p[ BA ]
-    BBA = p[ BB ]
-    BAB = p[ BA+1 ]
-    BBB = p[ BB+1 ]
+	B = p[xi + 1 + 1] + yi
+	BA = p[B + 1] + zi
+	BB = p[B + 1 + 1] + zi
+	BAA = p[BA + 1]
+	BBA = p[BB + 1]
+	BAB = p[BA + 1 + 1]
+	BBB = p[BB + 1 + 1]
 
-    return perlin_lerp(w,
-        perlin_lerp(v,
-            perlin_lerp(u,
-                perlin_grad(AAA,x,y,z),
-                perlin_grad(BAA,x-1,y,z)
-            ),
-            perlin_lerp(u,
-                perlin_grad(ABA,x,y-1,z),
-                perlin_grad(BBA,x-1,y-1,z)
-            )
-        ),
-        perlin_lerp(v,
-            perlin_lerp(u,
-                perlin_grad(AAB,x,y,z-1), perlin_grad(BAB,x-1,y,z-1)
-            ),
-            perlin_lerp(u,
-                perlin_grad(ABB,x,y-1,z-1), perlin_grad(BBB,x-1,y-1,z-1)
-            )
-        )
-    )
+	return perlin_lerp(
+		w,
+		perlin_lerp(
+			v,
+			perlin_lerp(u, perlin_grad(AAA, x, y, z), perlin_grad(BAA, x - 1, y, z)),
+			perlin_lerp(u, perlin_grad(ABA, x, y - 1, z), perlin_grad(BBA, x - 1, y - 1, z))
+		),
+		perlin_lerp(
+			v,
+			perlin_lerp(u, perlin_grad(AAB, x, y, z - 1), perlin_grad(BAB, x - 1, y, z - 1)),
+			perlin_lerp(u, perlin_grad(ABB, x, y - 1, z - 1), perlin_grad(BBB, x - 1, y - 1, z - 1))
+		)
+	)
 end

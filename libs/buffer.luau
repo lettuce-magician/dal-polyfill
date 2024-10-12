@@ -3,9 +3,10 @@
 -- this is under MIT license
 
 local table = require("./table")
-local bit32 = require("./bit32")
 local string = require("./string")
 local nativetypes = require("./nativetypes")
+local privatekey = require("./privatekey")
+local typeof = require("./globals").typeof
 
 local Character = table.create(256)
 do
@@ -14,7 +15,7 @@ do
 	end
 end
 
-local BufferKey = function() end
+local BufferKey = privatekey
 local SizeKey = function() end
 
 local function writeToBuffer(this: any, index: number, size: number, value: number): ()
@@ -100,7 +101,12 @@ local function readBytesAligned(this: any, index: number, length: number): strin
 		return string.pack("<I" .. length, readFromBuffer(this, index, length * 8))
 	elseif length == 4 then
 		local value = readFromBuffer(this, index, 32)
-		return string.char(bit32.extract(value, 0, 8), bit32.extract(value, 8, 8), bit32.extract(value, 16, 8), bit32.extract(value, 24, 8))
+		return string.char(
+			bit32.extract(value, 0, 8),
+			bit32.extract(value, 8, 8),
+			bit32.extract(value, 16, 8),
+			bit32.extract(value, 24, 8)
+		)
 	end
 
 	local prefix = 3 - (index / 8 - 1) % 4
@@ -118,7 +124,12 @@ local function readBytesAligned(this: any, index: number, length: number): strin
 	local n = bit32.rshift(index, 5) + 1
 	for i = 1, t do
 		local value = buf[n + i - 1] or 0
-		str[o + i] = string.char(bit32.extract(value, 0, 8), bit32.extract(value, 8, 8), bit32.extract(value, 16, 8), bit32.extract(value, 24, 8))
+		str[o + i] = string.char(
+			bit32.extract(value, 0, 8),
+			bit32.extract(value, 8, 8),
+			bit32.extract(value, 16, 8),
+			bit32.extract(value, 24, 8)
+		)
 	end
 
 	if suffix > 0 then
@@ -138,7 +149,7 @@ function buffer.create(size: number)
 	size *= 8
 	return setmetatable({
 		[BufferKey] = table.create(math.ceil(size / 32)),
-		[SizeKey] = size :: any
+		[SizeKey] = size :: any,
 	}, buffer)
 end
 
@@ -161,7 +172,7 @@ function buffer.fromstring(str: string)
 
 	return setmetatable({
 		[BufferKey] = buf,
-		[SizeKey] = #str * 8 :: any
+		[SizeKey] = #str * 8 :: any,
 	}, buffer)
 end
 
@@ -337,20 +348,20 @@ function buffer.readf64(this, offset): number
 	local b = readFromBuffer(this, offset, 32)
 
 	return (
-			string.unpack(
-				"<d",
-				string.char(
-					bit32.band(a, 255),
-					bit32.extract(a, 8, 8),
-					bit32.extract(a, 16, 8),
-					bit32.extract(a, 24, 8),
-					bit32.band(b, 255),
-					bit32.extract(b, 8, 8),
-					bit32.extract(b, 16, 8),
-					bit32.extract(b, 24, 8)
-				)
+		string.unpack(
+			"<d",
+			string.char(
+				bit32.band(a, 255),
+				bit32.extract(a, 8, 8),
+				bit32.extract(a, 16, 8),
+				bit32.extract(a, 24, 8),
+				bit32.band(b, 255),
+				bit32.extract(b, 8, 8),
+				bit32.extract(b, 16, 8),
+				bit32.extract(b, 24, 8)
 			)
 		)
+	)
 end
 
 nativetypes[buffer] = "buffer"

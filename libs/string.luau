@@ -1,3 +1,5 @@
+local typeof = require("./globals").typeof
+
 local function split(inputstr, sep)
 	sep = sep or "%s"
 	local t = {}
@@ -7,7 +9,7 @@ local function split(inputstr, sep)
 			return t
 		end
 	end
-	return {inputstr}
+	return { inputstr }
 end
 
 pcall(function()

@@ -1,4 +1,5 @@
 local perlin = require("./perlin")
+local typeof = require("./globals").typeof
 
 local getmax = math.max
 local getmin = math.min
@@ -116,7 +117,7 @@ local function log10(x): number
 end
 
 local function round(n: number): number
-	return math.floor((math.floor(n * 2) + 1) / 2)
+	return floor((floor(n * 2) + 1) / 2)
 end
 
 local function sign(n)
@@ -164,4 +165,4 @@ return {
 	sin = math.sin,
 	sqrt = math.sqrt,
 	tan = math.tan,
-}
+} :: typeof(math)

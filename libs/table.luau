@@ -1,3 +1,5 @@
+local typeof = require("./globals").typeof
+
 local function clear(t: {})
 	for i in pairs(t) do
 		t[i] = nil
@@ -38,7 +40,7 @@ local function foreach(t: {}, fn: (any, any) -> ())
 	end
 end
 
-local function foreachi(t: {}, fn:(number, any) -> ())
+local function foreachi(t: {}, fn: (number, any) -> ())
 	for i, v in pairs(t) do
 		if type(i) == "number" then
 			fn(i, v)
@@ -47,12 +49,13 @@ local function foreachi(t: {}, fn:(number, any) -> ())
 end
 
 local frozentables = require("./frozentables")
-local TableSourceKey = function() end
+-- local iteratables = require("./iteratables")
+local privatekey = require("./privatekey")
 
 local FrozenTable = {}
 
 function FrozenTable.__index(self, k)
-	return rawget(self, TableSourceKey)[k]
+	return self[privatekey][k]
 end
 
 function FrozenTable.__newindex()
@@ -60,11 +63,11 @@ function FrozenTable.__newindex()
 end
 
 function FrozenTable.__tostring(self): string
-	return tostring(rawget(self, TableSourceKey))
+	return tostring(self[privatekey])
 end
 
 function FrozenTable.__len(self): number
-	return #rawget(self, TableSourceKey)
+	return #self[privatekey]
 end
 
 local function freeze(t: typeof(setmetatable({} :: {}, {} :: {})))
@@ -81,13 +84,15 @@ local function freeze(t: typeof(setmetatable({} :: {}, {} :: {})))
 		freezeMt = FrozenTable
 	end
 	local frozen = setmetatable({
-		[TableSourceKey] = t
+		[privatekey] = t,
 	}, freezeMt)
 
-	frozentables[frozen] = {
-		[1] = mt,
-		[2] = t :: any
-	}
+	-- frozentables[frozen] = {
+	-- 	[1] = mt,
+	-- 	[2] = t :: any,
+	-- }
+	frozentables[frozen] = mt or false
+	-- iteratables[frozen] = t
 
 	return frozen
 end
@@ -104,31 +109,33 @@ local function getn(t: {}): number
 end
 
 local function maxn(t: {}): number
-    local max = 0
-    for k, v in pairs(t) do
-        if type(k) == "number" and k > max then
-            max = k
-        end
-    end
-    return max
+	local max = 0
+	for k, v in pairs(t) do
+		if type(k) == "number" and k > max then
+			max = k
+		end
+	end
+	return max
 end
 
-return ({
-	clear = clear,
-	clone = clone,
-	create = create,
-	find = find,
-	foreach = foreach,
-	foreachi = foreachi,
-	freeze = (freeze :: any) :: typeof(table.freeze),
-	getn = getn,
-	isfrozen = isfrozen,
-	maxn = maxn,
-	concat = table.concat,
-	insert = table.insert,
-	move = table.move,
-	pack = table.pack,
-	remove = table.remove,
-	sort = table.sort,
-	unpack = table.unpack
-} :: any) :: typeof(table)
+return (
+	{
+		clear = clear,
+		clone = clone,
+		create = create,
+		find = find,
+		foreach = foreach,
+		foreachi = foreachi,
+		freeze = (freeze :: any) :: typeof(table.freeze),
+		getn = getn,
+		isfrozen = isfrozen,
+		maxn = maxn,
+		concat = table.concat,
+		insert = table.insert,
+		move = table.move,
+		pack = table.pack,
+		remove = table.remove,
+		sort = table.sort,
+		unpack = table.unpack,
+	} :: any
+) :: typeof(table)
