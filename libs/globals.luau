@@ -309,4 +309,5 @@ return {
 	gcinfo = (dal_gcinfo :: any) :: typeof(gcinfo),
 	setfenv = (dal_setfenv :: any) :: typeof(setfenv),
 	getfenv = (dal_getfenv :: any) :: typeof(getfenv),
+	_VERSION = "Luau"
 }
