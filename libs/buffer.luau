@@ -8,6 +8,18 @@ local nativetypes = require("./nativetypes")
 local privatekey = require("./privatekey")
 local typeof = require("./globals").typeof
 
+local getMax = math.max
+local getCeil = math.ceil
+local getFrexp = math.frexp
+local getAbs = math.abs
+local clamp = math.clamp
+local round = math.round
+local stringByte = string.byte
+local stringUnpack = string.unpack
+local stringPack = string.pack
+local stringChar = string.char
+local tableConcat = table.concat
+
 local Character = table.create(256)
 do
 	for i = 0, 255 do
@@ -32,7 +44,7 @@ local function writeToBuffer(this: any, index: number, size: number, value: numb
 		buf[n + 1] = bit32.replace(buf[n + 1] or 0, bit32.extract(value, rem, size - rem), 0, size - rem)
 	end
 
-	this[SizeKey] = math.max(this[SizeKey], index)
+	this[SizeKey] = getMax(this[SizeKey], index)
 end
 
 local function readFromBuffer(this: any, index: number, size: number): number
@@ -62,14 +74,14 @@ local function writeBytesAligned(this: any, index: number, bytes: string, count:
 	end
 
 	if length < 4 then
-		writeToBuffer(this, index, length * 8, (string.unpack("<I" .. length, bytes)))
+		writeToBuffer(this, index, length * 8, (stringUnpack("<I" .. length, bytes)))
 	elseif length == 4 then
-		local a, b, c, d = string.byte(bytes, 1, 4)
+		local a, b, c, d = stringByte(bytes, 1, 4)
 		writeToBuffer(this, index, 32, a + b * 256 + c * 65536 + d * 16777216)
 	elseif length < 8 then
-		local a, b, c, d = string.byte(bytes, 1, 4)
+		local a, b, c, d = stringByte(bytes, 1, 4)
 		writeToBuffer(this, index, 32, a + b * 256 + c * 65536 + d * 16777216)
-		writeToBuffer(this, index, length * 8 - 32, (string.unpack("<I" .. length - 4, bytes, 5)))
+		writeToBuffer(this, index, length * 8 - 32, (stringUnpack("<I" .. length - 4, bytes, 5)))
 	else
 		local buf = this[BufferKey]
 		local bit = index % 32
@@ -78,19 +90,19 @@ local function writeBytesAligned(this: any, index: number, bytes: string, count:
 
 		if bit ~= 0 then
 			offset = 4 - bit / 8
-			writeToBuffer(this, index, 32 - bit, (string.unpack("<I" .. offset, bytes)))
+			writeToBuffer(this, index, 32 - bit, (stringUnpack("<I" .. offset, bytes)))
 			n += 1
 		end
 
 		for i = offset + 4, length, 4 do
-			local a, b, c, d = string.byte(bytes, i - 3, i)
+			local a, b, c, d = stringByte(bytes, i - 3, i)
 			buf[n] = a + b * 256 + c * 65536 + d * 16777216
 			n += 1
 		end
 
 		local rem = (length - offset - 4) % 4
 		if rem > 0 then
-			local v = string.unpack("<I" .. rem, bytes, length - rem + 1)
+			local v = stringUnpack("<I" .. rem, bytes, length - rem + 1)
 			buf[n] = bit32.replace(buf[n] or 0, v, 0, rem * 8)
 		end
 	end
@@ -98,10 +110,10 @@ end
 
 local function readBytesAligned(this: any, index: number, length: number): string
 	if length < 4 then
-		return string.pack("<I" .. length, readFromBuffer(this, index, length * 8))
+		return stringPack("<I" .. length, readFromBuffer(this, index, length * 8))
 	elseif length == 4 then
 		local value = readFromBuffer(this, index, 32)
-		return string.char(
+		return stringChar(
 			bit32.extract(value, 0, 8),
 			bit32.extract(value, 8, 8),
 			bit32.extract(value, 16, 8),
@@ -116,7 +128,7 @@ local function readBytesAligned(this: any, index: number, length: number): strin
 	local str = table.create(t + 2)
 
 	if prefix > 0 then
-		str[1] = string.pack("<I" .. prefix, readFromBuffer(this, index, prefix * 8))
+		str[1] = stringPack("<I" .. prefix, readFromBuffer(this, index, prefix * 8))
 		o = 1
 	end
 
@@ -124,7 +136,7 @@ local function readBytesAligned(this: any, index: number, length: number): strin
 	local n = bit32.rshift(index, 5) + 1
 	for i = 1, t do
 		local value = buf[n + i - 1] or 0
-		str[o + i] = string.char(
+		str[o + i] = stringChar(
 			bit32.extract(value, 0, 8),
 			bit32.extract(value, 8, 8),
 			bit32.extract(value, 16, 8),
@@ -133,10 +145,10 @@ local function readBytesAligned(this: any, index: number, length: number): strin
 	end
 
 	if suffix > 0 then
-		str[o + t + 1] = string.pack("<I" .. suffix, bit32.extract(buf[n + t] or 0, 0, suffix * 8))
+		str[o + t + 1] = stringPack("<I" .. suffix, bit32.extract(buf[n + t] or 0, 0, suffix * 8))
 	end
 
-	return table.concat(str)
+	return tableConcat(str)
 end
 
 local buffer = {}
@@ -161,13 +173,13 @@ function buffer.fromstring(str: string)
 	local length = #str
 	local buf = table.create(math.ceil(length / 4))
 	for i = 1, length / 4 do
-		local a, b, c, d = string.byte(str, i * 4 - 3, i * 4)
+		local a, b, c, d = stringByte(str, i * 4 - 3, i * 4)
 		buf[i] = a + b * 256 + c * 65536 + d * 16777216
 	end
 
 	local rem = length % 4
 	if rem ~= 0 then
-		buf[math.ceil(length / 4)] = string.unpack("<I" .. rem, str, length - rem)
+		buf[getCeil(length / 4)] = stringUnpack("<I" .. rem, str, length - rem)
 	end
 
 	return setmetatable({
@@ -305,9 +317,9 @@ function buffer.writef32(b, offset: number, float: number): ()
 	elseif float ~= float then
 		writeToBuffer(b, offset, 32, BINARY_NAN)
 	else
-		local mantissa, exponent = math.frexp(math.abs(float))
-		mantissa = math.round((mantissa - 0.5) * 16777216)
-		exponent = math.clamp(exponent, -127, 128) + 127
+		local mantissa, exponent = getFrexp(getAbs(float))
+		mantissa = round((mantissa - 0.5) * 16777216)
+		exponent = clamp(exponent, -127, 128) + 127
 		local sign = if float >= 0 then 0 else 2147483648
 		writeToBuffer(b, offset, 32, sign + exponent * 8388608 + mantissa)
 	end
@@ -338,7 +350,7 @@ function buffer.writef64(this, offset, double: number): ()
 	-- 	error(`invalid argument #3 to 'writef64' (number expected, got {typeof(double)})`)
 	-- end
 
-	local a, b, c, d, e, f, g, h = string.byte(string.pack("<d", double), 1, 8)
+	local a, b, c, d, e, f, g, h = stringByte(stringPack("<d", double), 1, 8)
 	writeToBuffer(this, offset, 32, a + b * 256 + c * 65536 + d * 16777216)
 	writeToBuffer(this, offset, 32, e + f * 256 + g * 65536 + h * 16777216)
 end
@@ -348,9 +360,9 @@ function buffer.readf64(this, offset): number
 	local b = readFromBuffer(this, offset, 32)
 
 	return (
-		string.unpack(
+		stringUnpack(
 			"<d",
-			string.char(
+			stringChar(
 				bit32.band(a, 255),
 				bit32.extract(a, 8, 8),
 				bit32.extract(a, 16, 8),

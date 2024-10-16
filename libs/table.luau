@@ -110,7 +110,7 @@ end
 
 local function maxn(t: {}): number
 	local max = 0
-	for k, v in pairs(t) do
+	for k, _ in pairs(t) do
 		if type(k) == "number" and k > max then
 			max = k
 		end
