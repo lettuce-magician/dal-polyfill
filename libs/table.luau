@@ -1,4 +1,5 @@
 local typeof = require("./globals").typeof
+local lockedtables = require("./lockedtables")
 
 local function clear(t: {})
 	for i in pairs(t) do
@@ -6,13 +7,34 @@ local function clear(t: {})
 	end
 end
 
--- selene: allow(manual_table_clone)
-local function clone(t: {})
-	local new = {}
-	for i, v in pairs(t) do
-		new[i] = v
+local clone
+-- selene: allow(global_usage)
+if _G.__ALLOW_DEBUG_LIBRARY_USAGE__ then
+	local getmt = debug.getmetatable
+	clone = function(t: {})
+		local mt = getmt(t)
+		if mt.__metatable then
+			error("invalid argument #1 to 'clone' (table has a protected metatable)")
+		end
+		-- selene: allow(manual_table_clone)
+		local new = setmetatable({}, mt)
+		for i, v in pairs(t) do
+			new[i] = v
+		end
+		return new
 	end
-	return new
+else
+	clone = function(t: {})
+		if lockedtables[t] == false then
+			error("invalid argument #1 to 'clone' (table has a protected metatable)")
+		end
+		-- selene: allow(manual_table_clone)
+		local new = setmetatable({}, getmetatable(t))
+		for i, v in pairs(t) do
+			new[i] = v
+		end
+		return new
+	end
 end
 
 local function create(count: number, value: any)

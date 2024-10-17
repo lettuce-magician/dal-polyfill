@@ -5,6 +5,7 @@ local djb2 = require("./djb2")
 local frozentables = require("./frozentables")
 local privatekey = require("./privatekey")
 local proxies = require("./proxies")
+local lockedtables = require("./lockedtables")
 
 local function dal_type(value)
 	local customtype = weaktypes[value]
@@ -53,49 +54,53 @@ local function dal_unpack(tbl: {}, f: number?, t: number?)
 	return unpack(tbl, f, t)
 end
 
-local function pairsWithHash(t: {})
-	local frozen = frozentables[t]
-	if frozen then
-		t = frozen[privatekey]
-	end
-
-	local keys = {}
-	local hashmap = {}
-	for key in pairs(t) do
-		local hash
-		if type(key) == "number" then
-			hash = key
-		else
-			hash = djb2(tostring(key))
+local dal_pairs
+-- selene: allow(global_usage)
+if _G.__HASHED_PAIRS__ then
+	dal_pairs = function(t: {})
+		local frozen = frozentables[t]
+		if frozen then
+			t = frozen[privatekey]
 		end
-		table.insert(keys, hash)
-		hashmap[hash] = key
-	end
 
-	table.sort(keys, function(a, b)
-		return a < b
-	end)
-
-	local i = 0
-	return function(): any
-		i = i + 1
-		local hashkey = keys[i]
-		if hashkey then
-			local key = hashmap[hashkey]
-			if key then
-				return key, t[key]
+		local keys = {}
+		local hashmap = {}
+		for key in pairs(t) do
+			local hash
+			if type(key) == "number" then
+				hash = key
+			else
+				hash = djb2(tostring(key))
 			end
+			table.insert(keys, hash)
+			hashmap[hash] = key
 		end
-		return
-	end
-end
 
-local function pairsWithoutHash(t: {})
-	local frozen = frozentables[t]
-	if frozen then
-		t = frozen[privatekey]
+		table.sort(keys, function(a, b)
+			return a < b
+		end)
+
+		local i = 0
+		return function(): any
+			i = i + 1
+			local hashkey = keys[i]
+			if hashkey then
+				local key = hashmap[hashkey]
+				if key then
+					return key, t[key]
+				end
+			end
+			return
+		end
 	end
-	return pairs(t)
+else
+	dal_pairs = function(t: {})
+		local frozen = frozentables[t]
+		if frozen then
+			t = frozen[privatekey]
+		end
+		return pairs(t)
+	end
 end
 
 local function dal_ipairs(t: {})
@@ -119,13 +124,11 @@ local function dal_getmetatable(value)
 	return mt
 end
 
-local lockedIteratableTables = setmetatable({}, { __mode = "k" })
-
 local function __DAL_INTERNAL_getmetatable(tbl: any)
-	local lockedTbl = lockedIteratableTables[tbl]
-	if lockedTbl then
+	local iterMethod = lockedtables[tbl]
+	if iterMethod then
 		return {
-			__iter = lockedTbl,
+			__iter = iterMethod,
 		}
 	end
 	return dal_getmetatable(tbl)
@@ -135,13 +138,13 @@ local function dal_setmetatable(tbl: {}, mt: { [any]: any  })
 	if mt.__metatable then
 		local iterMethod = mt.__iter
 		if iterMethod then
-			lockedIteratableTables[tbl] = iterMethod
+			lockedtables[tbl] = iterMethod
+		else
+			lockedtables[tbl] = false
 		end
 	end
 	return setmetatable(tbl, mt)
 end
-
-local clone = table.clone
 
 local Proxy = {}
 
@@ -239,7 +242,11 @@ nativetypes[userdata] = "userdata"
 local function dal_newproxy(mt: boolean)
 	local newud = {}
 	if mt then
-		local proxyMt = clone(userdata)
+		-- selene: allow(manual_table_clone)
+		local proxyMt = {}
+		for i, v in pairs(userdata) do
+			proxyMt[i] = v
+		end
 		setmetatable(newud, proxyMt)
 		local p = {
 			__newindex = function(self, k, v)
@@ -299,8 +306,7 @@ return {
 	rawset = (dal_rawset :: any) :: typeof(rawset),
 	next = (dal_next :: any) :: typeof(next),
 	unpack = (dal_unpack :: any) :: typeof(unpack),
-	pairsWithHash = (pairsWithHash :: any) :: typeof(pairs),
-	pairsWithoutHash = (pairsWithoutHash :: any) :: typeof(pairs),
+	pairs = (dal_pairs :: any) :: typeof(pairs),
 	ipairs = (dal_ipairs :: any) :: typeof(ipairs),
 	getmetatable = (dal_getmetatable :: any) :: typeof(getmetatable),
 	__DAL_INTERNAL_getmetatable = (__DAL_INTERNAL_getmetatable :: any) :: typeof(getmetatable),
