@@ -237,6 +237,10 @@ function userdata.__tostring(self)
 	-- return display
 end
 
+function userdata.__iter(self)
+	error(`attempt to iterate over a {typeof(self)} value`)
+end
+
 nativetypes[userdata] = "userdata"
 
 local function dal_newproxy(mt: boolean)
