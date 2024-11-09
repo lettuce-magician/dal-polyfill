@@ -51,7 +51,7 @@ local function perlin_lerp(t: number, a: number, b: number): number
 	return a + t * (b - a)
 end
 
-return function(x: number, y0: number?, z0: number?)
+return function(x: number, y0: number?, z0: number?): number
 	local y = y0 or 0
 	local z = z0 or 0
 

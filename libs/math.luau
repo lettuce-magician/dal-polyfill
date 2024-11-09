@@ -1,5 +1,6 @@
 local perlin = require("./perlin")
 local typeof = require("./globals").typeof
+local isnumber = require("./isnumber")
 
 local getmax = math.max
 local getmin = math.min
@@ -11,20 +12,49 @@ local log2 = log(2)
 local math_atan = math.atan
 
 local function atan(a: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(a) then
+			error(`invalid argument #1 to 'atan' (number expected, got {typeof(a)})`)
+		end
+	end
 	return math_atan(a)
 end
 
 local function atan2(a: number, b: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(a) then
+			error(`invalid argument #1 to 'atan2' (number expected, got {typeof(a)})`)
+		elseif not isnumber(b) then
+			error(`invalid argument #2 to 'atan2' (number expected, got {typeof(b)})`)
+		end
+	end
 	return (math_atan :: any)(a, b)
 end
 
 local function clamp(v: number, min: number, max: number): number
-	assert(min <= max, "max must be greater than or equal to min")
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(v) then
+			error(`invalid argument #1 to 'clamp' (number expected, got {typeof(v)})`)
+		elseif not isnumber(min) then
+			error(`invalid argument #2 to 'clamp' (number expected, got {typeof(min)})`)
+		elseif not isnumber(max) then
+			error(`invalid argument #3 to 'clamp' (number expected, got {typeof(max)})`)
+		end
+	end
+
+	if min > max then
+		error("max must be greater than or equal to min")
+	end
 
 	return getmax(min, getmin(v, max))
 end
 
 local function cosh(x: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'cosh' (number expected, got {typeof(x)})`)
+		end
+	end
 	if x == 0.0 then
 		return 1.0
 	end
@@ -37,6 +67,11 @@ local function cosh(x: number): number
 end
 
 local function sinh(x: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'sinh' (number expected, got {typeof(x)})`)
+		end
+	end
 	if x == 0 then
 		return 0.0
 	end
@@ -63,6 +98,11 @@ local function sinh(x: number): number
 end
 
 local function tanh(x: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'tanh' (number expected, got {typeof(x)})`)
+		end
+	end
 	if x == 0 then
 		return 0.0
 	end
@@ -89,10 +129,22 @@ local function tanh(x: number): number
 end
 
 local function pow(a: number, b: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(a) then
+			error(`invalid argument #1 to 'pow' (number expected, got {typeof(a)})`)
+		elseif not isnumber(b) then
+			error(`invalid argument #2 to 'pow' (number expected, got {typeof(b)})`)
+		end
+	end
 	return a ^ b
 end
 
 local function frexp(x: number): (number, number)
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'frexp' (number expected, got {typeof(x)})`)
+		end
+	end
 	if x == 0 then
 		return 0.0, 0.0
 	end
@@ -109,18 +161,40 @@ local function frexp(x: number): (number, number)
 end
 
 local function ldexp(x: number, e: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'ldexp' (number expected, got {typeof(x)})`)
+		elseif not isnumber(e) then
+			error(`invalid argument #2 to 'ldexp' (number expected, got {typeof(e)})`)
+		end
+	end
 	return x * 2 ^ e
 end
 
 local function log10(x): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(x) then
+			error(`invalid argument #1 to 'log10' (number expected, got {typeof(x)})`)
+		end
+	end
 	return log(x) / log(10)
 end
 
 local function round(n: number): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(n) then
+			error(`invalid argument #1 to 'round' (number expected, got {typeof(n)})`)
+		end
+	end
 	return floor((floor(n * 2) + 1) / 2)
 end
 
-local function sign(n)
+local function sign(n): number
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if not isnumber(n) then
+			error(`invalid argument #1 to 'sign' (number expected, got {typeof(n)})`)
+		end
+	end
 	if n > 0 then
 		return 1
 	elseif n < 0 then

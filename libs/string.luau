@@ -3,7 +3,7 @@ local typeof = require("./globals").typeof
 local gmatch = string.gmatch
 local insert = table.insert
 
-local function split(inputstr, sep)
+local function split(inputstr, sep): { string }
 	sep = sep or "%s"
 	local t = {}
 	for field, s in gmatch(inputstr, "([^" .. sep .. "]*)(" .. sep .. "?)") do

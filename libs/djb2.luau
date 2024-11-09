@@ -1,6 +1,6 @@
 local byte = string.byte
 
-return function(str)
+return function(str: string): number
 	local hash = 5381
 
 	for i = 1, #str do

@@ -7,32 +7,43 @@ local function clear(t: {})
 	end
 end
 
-local clone
--- selene: allow(global_usage)
-if _G.__ALLOW_DEBUG_LIBRARY_USAGE__ then
-	local getmt = debug.getmetatable
+local clone: any
+if _G.__DAL_ALLOW_DEBUG_LIBRARY_USAGE__ then
+	local getmt = (debug :: any).getmetatable
 	clone = function(t: {})
+		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+			if type(t) ~= "table" then
+				error(`invalid argument #1 to 'clone' (table expected, got {typeof(t)})`)
+			end
+		end
 		local mt = getmt(t)
 		if mt.__metatable then
 			error("invalid argument #1 to 'clone' (table has a protected metatable)")
 		end
 		-- selene: allow(manual_table_clone)
-		local new = setmetatable({}, mt)
+		local new = {}
 		for i, v in pairs(t) do
 			new[i] = v
 		end
+		setmetatable(new, mt)
 		return new
 	end
 else
-	clone = function(t: {})
+	clone = function(t)
+		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+			if type(t) ~= "table" then
+				error(`invalid argument #1 to 'clone' (table expected, got {typeof(t)})`)
+			end
+		end
 		if lockedtables[t] == false then
 			error("invalid argument #1 to 'clone' (table has a protected metatable)")
 		end
 		-- selene: allow(manual_table_clone)
-		local new = setmetatable({}, getmetatable(t))
+		local new = {}
 		for i, v in pairs(t) do
 			new[i] = v
 		end
+		setmetatable(new, getmetatable(t))
 		return new
 	end
 end
@@ -56,13 +67,13 @@ local function find(t: {}, value: any): number?
 	return nil
 end
 
-local function foreach(t: {}, fn: (any, any) -> ())
+local function foreach(t: {}, fn: (any, any) -> ()): ()
 	for i, v in pairs(t) do
 		fn(i, v)
 	end
 end
 
-local function foreachi(t: {}, fn: (number, any) -> ())
+local function foreachi(t: {}, fn: (number, any) -> ()): ()
 	for i, v in pairs(t) do
 		if type(i) == "number" then
 			fn(i, v)

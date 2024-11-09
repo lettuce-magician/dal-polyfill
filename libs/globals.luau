@@ -6,8 +6,9 @@ local frozentables = require("./frozentables")
 local privatekey = require("./privatekey")
 local proxies = require("./proxies")
 local lockedtables = require("./lockedtables")
+local isnumber = require("./isnumber")
 
-local function dal_type(value)
+local function dal_type(value: any): string
 	local customtype = weaktypes[value]
 	if customtype then
 		return customtype
@@ -20,7 +21,7 @@ local function dal_type(value)
 	return type(value)
 end
 
-local function dal_typoef(value)
+local function dal_typeof(value: any): string
 	local mt = getmetatable(value :: any)
 	local customtype = customtypes[mt]
 	if customtype then
@@ -29,14 +30,24 @@ local function dal_typoef(value)
 	return dal_type(value)
 end
 
-local function dal_rawget(t: {}, k: any)
+local function dal_rawget(t: {}, k: any): any
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if dal_typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'rawget' (table expected, got {dal_typeof(t)})`)
+		end
+	end
 	if proxies[t] then
 		return t[k]
 	end
 	return rawget(t, k)
 end
 
-local function dal_rawset(t: {}, k: any, v: any)
+local function dal_rawset(t: {}, k: any, v: any): ()
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if dal_typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'rawset' (table expected, got {dal_typeof(t)})`)
+		end
+	end
 	if proxies[t] then
 		t[k] = v
 	else
@@ -45,19 +56,36 @@ local function dal_rawset(t: {}, k: any, v: any)
 end
 
 local function dal_next(t: {}, i)
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if dal_typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'next' (table expected, got {dal_typeof(t)})`)
+		end
+	end
 	return next(t, i)
 end
 
 local unpack = table.unpack
 
-local function dal_unpack(tbl: {}, f: number?, t: number?)
-	return unpack(tbl, f, t)
+local dal_unpack: any
+if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	dal_unpack = function(tbl: {}, f: number?, t: number?)
+		if dal_typeof(tbl) ~= "table" then
+			error(`invalid argument #1 to 'unpack' (table expected, got {dal_typeof(tbl)})`)
+		end
+		return unpack(tbl, f, t)
+	end
+else
+	dal_unpack = unpack
 end
 
 local dal_pairs
--- selene: allow(global_usage)
-if _G.__HASHED_PAIRS__ then
+if _G.__DAL_HASHED_PAIRS__ then
 	dal_pairs = function(t: {})
+		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+			if dal_typeof(t) ~= "table" then
+				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
+			end
+		end
 		local frozen = frozentables[t]
 		if frozen then
 			t = frozen[privatekey]
@@ -95,15 +123,25 @@ if _G.__HASHED_PAIRS__ then
 	end
 else
 	dal_pairs = function(t: {})
+		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+			if dal_typeof(t) ~= "table" then
+				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
+			end
+		end
 		local frozen = frozentables[t]
 		if frozen then
 			t = frozen[privatekey]
 		end
-		return pairs(t)
+		return pairs(t) :: any
 	end
 end
 
 local function dal_ipairs(t: {})
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if dal_typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'ipairs' (table expected, got {dal_typeof(t)})`)
+		end
+	end
 	local frozen = frozentables[t]
 	if frozen then
 		t = frozen[privatekey]
@@ -112,7 +150,7 @@ local function dal_ipairs(t: {})
 end
 
 local proxyMetatables = {}
-local function dal_getmetatable(value)
+local function dal_getmetatable(value): any
 	local frozen = frozentables[value]
 	if frozen then
 		return frozen[1]
@@ -124,18 +162,25 @@ local function dal_getmetatable(value)
 	return mt
 end
 
-local function __DAL_INTERNAL_getmetatable(tbl: any)
-	local iterMethod = lockedtables[tbl]
+local function __DAL_INTERNAL_getmetatable(value)
+	local iterMethod = lockedtables[value]
 	if iterMethod then
 		return {
 			__iter = iterMethod,
 		}
 	end
-	return dal_getmetatable(tbl)
+	return dal_getmetatable(value)
 end
 
-local function dal_setmetatable(tbl: {}, mt: { [any]: any  })
-	if mt.__metatable then
+local function dal_setmetatable(tbl: {}, mt: { [any]: any } | nil)
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if dal_typeof(tbl) ~= "table" then
+			error(`invalid argument #1 to 'setmetatable' (table expected, got {dal_typeof(tbl)})`)
+		elseif dal_typeof(mt) ~= "table" and mt ~= nil then
+			error(`invalid argument #2 to 'setmetatable' (nil or table expected, got {dal_typeof(mt)})`)
+		end
+	end
+	if mt and mt.__metatable then
 		local iterMethod = mt.__iter
 		if iterMethod then
 			lockedtables[tbl] = iterMethod
@@ -243,7 +288,12 @@ end
 
 nativetypes[userdata] = "userdata"
 
-local function dal_newproxy(mt: boolean)
+local function dal_newproxy(mt: boolean?)
+	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if mt and type(mt) ~= "boolean" then
+			error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
+		end
+	end
 	local newud = {}
 	if mt then
 		-- selene: allow(manual_table_clone)
@@ -256,7 +306,7 @@ local function dal_newproxy(mt: boolean)
 			__newindex = function(self, k, v)
 				proxyMt[k] = v
 				rawset(self, k, v)
-			end
+			end,
 		}
 		local pt = setmetatable({}, p)
 		proxies[newud] = pt
@@ -272,27 +322,53 @@ local function dal_gcinfo(): number
 	return collectgarbage("count")
 end
 
-local function dal_setfenv(fn, env)
+local function dal_setfenv(fnOrIndex: () -> () | number, env)
+	fnOrIndex = fnOrIndex or 1
+	if isnumber(fnOrIndex) then
+		local info = (debug :: any).getinfo(fnOrIndex) :: {
+			func: () -> (),
+			what: string,
+		}
+		if info.what == "C" then
+			error("invalid argument #1 to 'getfenv' (invalid level)")
+		end
+		fnOrIndex = info.func
+	elseif type(fnOrIndex) ~= "function" then
+		error(`invalid argument #1 to 'getfenv' (number expected, got {dal_typeof(fnOrIndex)})`)
+	end
 	local i = 1
 	while true do
-		local name = (debug :: any).getupvalue(fn, i)
+		local name = (debug :: any).getupvalue(fnOrIndex, i)
 		if name == "_ENV" then
-			(debug :: any).upvaluejoin(fn, i, (function()
+			(debug :: any).upvaluejoin(fnOrIndex, i, function()
 				return env
-			end), 1)
+			end, 1)
 			break
 		elseif not name then
 			break
 		end
 		i = i + 1
 	end
-	return fn
+	return fnOrIndex
 end
 
-local function dal_getfenv(fn)
+local function dal_getfenv(fnOrIndex: (() -> () | number)?)
+	fnOrIndex = fnOrIndex or 1
+	if isnumber(fnOrIndex) then
+		local info = (debug :: any).getinfo(fnOrIndex) :: {
+			func: () -> (),
+			what: string,
+		}
+		if info.what == "C" then
+			error("invalid argument #1 to 'getfenv' (invalid level)")
+		end
+		fnOrIndex = info.func
+	elseif type(fnOrIndex) ~= "function" then
+		error(`invalid argument #1 to 'getfenv' (number expected, got {dal_typeof(fnOrIndex)})`)
+	end
 	local i = 1
 	while true do
-		local name, val = (debug :: any).getupvalue(fn, i)
+		local name, val = (debug :: any).getupvalue(fnOrIndex, i)
 		if name == "_ENV" then
 			return val
 		elseif not name then
@@ -305,7 +381,7 @@ end
 
 return {
 	type = (dal_type :: any) :: typeof(type),
-	typeof = (dal_typoef :: any) :: typeof(typeof),
+	typeof = (dal_typeof :: any) :: typeof(typeof),
 	rawget = (dal_rawget :: any) :: typeof(rawget),
 	rawset = (dal_rawset :: any) :: typeof(rawset),
 	next = (dal_next :: any) :: typeof(next),
@@ -319,5 +395,5 @@ return {
 	gcinfo = (dal_gcinfo :: any) :: typeof(gcinfo),
 	setfenv = (dal_setfenv :: any) :: typeof(setfenv),
 	getfenv = (dal_getfenv :: any) :: typeof(getfenv),
-	_VERSION = "Luau"
+	_VERSION = "Luau",
 }
