@@ -1,1 +1,4 @@
 std = "luau+lua53"
+
+[lints]
+global_usage = "allow"
