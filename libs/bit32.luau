@@ -77,4 +77,4 @@ return bit32
 		countrz = countrz,
 		countlz = countlz,
 		byteswap = byteswap,
-	}
+	} -- for lua54 or something
