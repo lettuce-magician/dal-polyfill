@@ -5,6 +5,7 @@ local band = bit32.band
 local rshift = bit32.rshift
 local lshift = bit32.lshift
 local bnot = bit32.bnot
+local bor = bit32.bor
 
 local function arshift(x: number, disp: number): number
 	local z = rshift(x, disp)
@@ -63,6 +64,10 @@ local function countlz(x: number): number
 	return 31 - floor(log(as32bit) / LN2)
 end
 
+local function byteswap(n: number): number
+	return bor(bor(bor(lshift(n, 24), band(lshift(n, 8), 0xff0000)), band(rshift(n, 8), 0xff00)), rshift(n, 24))
+end
+
 return bit32
 	or {
 		arshift = arshift,
@@ -71,4 +76,5 @@ return bit32
 		replace = replace,
 		countrz = countrz,
 		countlz = countlz,
+		byteswap = byteswap,
 	}
