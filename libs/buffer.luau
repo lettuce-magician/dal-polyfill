@@ -7,6 +7,7 @@ local string = require("./string")
 local nativetypes = require("./nativetypes")
 local privatekey = require("./privatekey")
 local typeof = require("./globals").typeof
+local isnumber = require("./isnumber")
 
 local getMax = math.max
 local getCeil = math.ceil
@@ -158,6 +159,12 @@ function buffer:__tostring()
 end
 
 function buffer.create(size: number)
+	if _G.DAL_runtime_type_checking then
+		if not isnumber(size) then
+			error(`invalid argument #1 to 'create' (number expected, got {typeof(size)})`)
+		end
+	end
+
 	size *= 8
 	return setmetatable({
 		[BufferKey] = table.create(math.ceil(size / 32)),
@@ -166,9 +173,11 @@ function buffer.create(size: number)
 end
 
 function buffer.fromstring(str: string)
-	-- if type(str) ~= "string" then
-	-- 	error(`invalid argument #1 to 'fromstring' (string expected, got {typeof(str)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if type(str) ~= "string" then
+			error(`invalid argument #1 to 'fromstring' (string expected, got {typeof(string)})`)
+		end
+	end
 
 	local length = #str
 	local buf = table.create(math.ceil(length / 4))
@@ -189,6 +198,12 @@ function buffer.fromstring(str: string)
 end
 
 function buffer.tostring(b): string
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'tostring' (buffer expected, got {typeof(b)})`)
+		end
+	end
+
 	local bufSize = #b[BufferKey]
 	if bufSize == 0 then
 		return ""
@@ -199,63 +214,136 @@ function buffer.tostring(b): string
 end
 
 function buffer.writeu8(b, offset: number, uint: number): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writeu8' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writeu8' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(uint) then
+			error(`invalid argument #3 to 'writeu8' (number expected, got {typeof(uint)})`)
+		end
+	end
 	offset *= 8
 	writeToBuffer(b, offset, 8, uint)
 end
 
 function buffer.writeu16(b, offset: number, uint: number): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writeu16' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writeu16' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(uint) then
+			error(`invalid argument #3 to 'writeu16' (number expected, got {typeof(uint)})`)
+		end
+	end
 	offset *= 8
 	writeToBuffer(b, offset, 16, uint)
 end
 
 function buffer.writeu32(b, offset: number, uint: number): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writeu32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writeu32' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(uint) then
+			error(`invalid argument #3 to 'writeu32' (number expected, got {typeof(uint)})`)
+		end
+	end
 	offset *= 8
 	writeToBuffer(b, offset, 32, uint)
 end
 
 function buffer.readu8(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readu8' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readu8' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	return readFromBuffer(b, offset, 8)
 end
 
 function buffer.readu16(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readu16' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readu16' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	return readFromBuffer(b, offset, 16)
 end
 
 function buffer.readu32(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readu32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readu32' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	return readFromBuffer(b, offset, 32)
 end
 
 function buffer.writei8(b, offset: number, int: number)
-	-- if type(int) ~= "number" then
-	-- 	error(`invalid argument #3 to 'readi8' (number expected, got {typeof(int)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writei8' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writei8' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(int) then
+			error(`invalid argument #3 to 'writei8' (number expected, got {typeof(int)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 8
 	writeToBuffer(b, offset, bitWidth, int % (bit32.lshift(1, bitWidth - 1) * 2))
 end
 
 function buffer.writei16(b, offset: number, int: number)
-	-- if type(int) ~= "number" then
-	-- 	error(`invalid argument #3 to 'readi16' (number expected, got {typeof(int)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writei16' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writei16' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(int) then
+			error(`invalid argument #3 to 'writei16' (number expected, got {typeof(int)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 16
 	writeToBuffer(b, offset, bitWidth, int % (bit32.lshift(1, bitWidth - 1) * 2))
 end
 
 function buffer.writei32(b, offset: number, int: number)
-	-- if type(int) ~= "number" then
-	-- 	error(`invalid argument #3 to 'readi8' (number expected, got {typeof(int)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writei32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writei32' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(int) then
+			error(`invalid argument #3 to 'writei32' (number expected, got {typeof(int)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 32
 	writeToBuffer(b, offset, bitWidth, int % (bit32.lshift(1, bitWidth - 1) * 2))
 end
 
 function buffer.readi8(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readi8' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readi8' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 8
 	local value = readFromBuffer(b, offset, bitWidth)
@@ -264,6 +352,13 @@ function buffer.readi8(b, offset: number): number
 end
 
 function buffer.readi16(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readi16' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readi16' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 16
 	local value = readFromBuffer(b, offset, bitWidth)
@@ -272,6 +367,13 @@ function buffer.readi16(b, offset: number): number
 end
 
 function buffer.readi32(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readi32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readi32' (number expected, got {typeof(offset)})`)
+		end
+	end
 	offset *= 8
 	local bitWidth = 32
 	local value = readFromBuffer(b, offset, bitWidth)
@@ -279,20 +381,40 @@ function buffer.readi32(b, offset: number): number
 	return if value >= max / 2 then value - max else value
 end
 
-function buffer.writestring(this, offset: number, bytes: string, count: number?): ()
+function buffer.writestring(b, offset: number, bytes: string, count: number?): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writestring' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writestring' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(bytes) then
+			error(`invalid argument #3 to 'writestring' (number expected, got {typeof(bytes)})`)
+		elseif count and not isnumber(count) then
+			error(`invalid argument #4 to 'writestring' (number or nil expected, got {typeof(count)})`)
+		end
+	end
 	offset *= 8
 	if bytes == "" then
 		return
 	end
-	writeBytesAligned(this, offset, bytes, count)
+	writeBytesAligned(b, offset, bytes, count)
 end
 
-function buffer.readstring(this, offset: number, count: number): string
+function buffer.readstring(b, offset: number, count: number): string
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readstring' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readstring' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(count) then
+			error(`invalid argument #3 to 'readstring' (number expected, got {typeof(count)})`)
+		end
+	end
 	offset *= 8
 	if count <= 0 then
 		return ""
 	end
-	return readBytesAligned(this, offset, count)
+	return readBytesAligned(b, offset, count)
 end
 
 local POS_INF = math.huge
@@ -303,9 +425,15 @@ local BINARY_NEG_INF = 0b11111111100000000000000000000000
 local BINARY_NAN = 0b01111111111111111111111111111111
 
 function buffer.writef32(b, offset: number, float: number): ()
-	-- if type(float) ~= "number" then
-	-- 	error(`invalid argument #3 to 'writef32' (number expected, got {typeof(float)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'writef32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writef32' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(float) then
+			error(`invalid argument #3 to 'writef32' (number expected, got {typeof(float)})`)
+		end
+	end
 
 	offset *= 8
 	if float == 0 then
@@ -326,6 +454,14 @@ function buffer.writef32(b, offset: number, float: number): ()
 end
 
 function buffer.readf32(b, offset: number): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(b) ~= "buffer" then
+			error(`invalid argument #1 to 'readf32' (buffer expected, got {typeof(b)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readf32' (number expected, got {typeof(offset)})`)
+		end
+	end
+
 	offset *= 8
 	local value = readFromBuffer(b, offset, 32)
 
@@ -346,9 +482,15 @@ function buffer.readf32(b, offset: number): number
 end
 
 function buffer.writef64(this, offset, double: number): ()
-	-- if type(double) ~= "number" then
-	-- 	error(`invalid argument #3 to 'writef64' (number expected, got {typeof(double)})`)
-	-- end
+	if _G.DAL_runtime_type_checking then
+		if typeof(this) ~= "buffer" then
+			error(`invalid argument #1 to 'writef64' (buffer expected, got {typeof(this)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'writef64' (number expected, got {typeof(offset)})`)
+		elseif not isnumber(double) then
+			error(`invalid argument #3 to 'writef64' (number expected, got {typeof(double)})`)
+		end
+	end
 
 	local a, b, c, d, e, f, g, h = stringByte(stringPack("<d", double), 1, 8)
 	writeToBuffer(this, offset, 32, a + b * 256 + c * 65536 + d * 16777216)
@@ -356,6 +498,14 @@ function buffer.writef64(this, offset, double: number): ()
 end
 
 function buffer.readf64(this, offset): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(this) ~= "buffer" then
+			error(`invalid argument #1 to 'readf64' (buffer expected, got {typeof(this)})`)
+		elseif not isnumber(offset) then
+			error(`invalid argument #2 to 'readf64' (number expected, got {typeof(offset)})`)
+		end
+	end
+
 	local a = readFromBuffer(this, offset, 32)
 	local b = readFromBuffer(this, offset, 32)
 

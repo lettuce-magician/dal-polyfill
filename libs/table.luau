@@ -2,17 +2,22 @@ local typeof = require("./globals").typeof
 local lockedtables = require("./lockedtables")
 
 local function clear(t: {})
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'clear' (table expected, got {typeof(t)})`)
+		end
+	end
 	for i in pairs(t) do
 		t[i] = nil
 	end
 end
 
 local clone: any
-if _G.__DAL_ALLOW_DEBUG_LIBRARY_USAGE__ then
+if _G.DAL_allow_debug_library_usage then
 	local getmt = (debug :: any).getmetatable
 	clone = function(t: {})
-		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
-			if type(t) ~= "table" then
+		if _G.DAL_runtime_type_checking then
+			if typeof(t) ~= "table" then
 				error(`invalid argument #1 to 'clone' (table expected, got {typeof(t)})`)
 			end
 		end
@@ -30,8 +35,8 @@ if _G.__DAL_ALLOW_DEBUG_LIBRARY_USAGE__ then
 	end
 else
 	clone = function(t)
-		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
-			if type(t) ~= "table" then
+		if _G.DAL_runtime_type_checking then
+			if typeof(t) ~= "table" then
 				error(`invalid argument #1 to 'clone' (table expected, got {typeof(t)})`)
 			end
 		end
@@ -49,6 +54,13 @@ else
 end
 
 local function create(count: number, value: any)
+	if _G.DAL_runtime_type_checking then
+		if type(count) == "number" then
+			error(`invalid argument #1 to 'create' (number expected, got {typeof(count)})`)
+		elseif typeof(value) ~= "table" then
+			error(`invalid argument #2 to 'create' (table expected, got {typeof(value)})`)
+		end
+	end
 	local new = {}
 	if value then
 		for i = 1, count do
@@ -59,6 +71,11 @@ local function create(count: number, value: any)
 end
 
 local function find(t: {}, value: any): number?
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'find' (table expected, got {typeof(t)})`)
+		end
+	end
 	for i, v in ipairs(t) do
 		if v == value then
 			return i
@@ -68,12 +85,26 @@ local function find(t: {}, value: any): number?
 end
 
 local function foreach(t: {}, fn: (any, any) -> ()): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'foreach' (table expected, got {typeof(t)})`)
+		elseif type(fn) ~= "function" then
+			error(`invalid argument #2 to 'foreach' (function expected, got {typeof(fn)})`)
+		end
+	end
 	for i, v in pairs(t) do
 		fn(i, v)
 	end
 end
 
 local function foreachi(t: {}, fn: (number, any) -> ()): ()
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'foreachi' (table expected, got {typeof(t)})`)
+		elseif type(fn) ~= "function" then
+			error(`invalid argument #2 to 'foreachi' (function expected, got {typeof(fn)})`)
+		end
+	end
 	for i, v in pairs(t) do
 		if type(i) == "number" then
 			fn(i, v)
@@ -104,6 +135,11 @@ function FrozenTable.__len(self): number
 end
 
 local function freeze(t: typeof(setmetatable({} :: {}, {} :: {})))
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'freeze' (table expected, got {typeof(t)})`)
+		end
+	end
 	local mt = getmetatable(t)
 	local freezeMt
 	if mt then
@@ -131,6 +167,11 @@ local function freeze(t: typeof(setmetatable({} :: {}, {} :: {})))
 end
 
 local function isfrozen(t: {}): boolean
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'isfrozen' (table expected, got {typeof(t)})`)
+		end
+	end
 	return frozentables[t] ~= nil
 end
 
@@ -138,10 +179,20 @@ local unpack = table.unpack
 local pack = table.pack
 
 local function getn(t: {}): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'getn' (table expected, got {typeof(t)})`)
+		end
+	end
 	return pack(unpack(t)).n
 end
 
 local function maxn(t: {}): number
+	if _G.DAL_runtime_type_checking then
+		if typeof(t) ~= "table" then
+			error(`invalid argument #1 to 'maxn' (table expected, got {typeof(t)})`)
+		end
+	end
 	local max = 0
 	for k, _ in pairs(t) do
 		if type(k) == "number" and k > max then

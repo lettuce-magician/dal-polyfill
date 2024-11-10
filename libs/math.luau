@@ -12,7 +12,7 @@ local log2 = log(2)
 local math_atan = math.atan
 
 local function atan(a: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(a) then
 			error(`invalid argument #1 to 'atan' (number expected, got {typeof(a)})`)
 		end
@@ -21,7 +21,7 @@ local function atan(a: number): number
 end
 
 local function atan2(a: number, b: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(a) then
 			error(`invalid argument #1 to 'atan2' (number expected, got {typeof(a)})`)
 		elseif not isnumber(b) then
@@ -32,7 +32,7 @@ local function atan2(a: number, b: number): number
 end
 
 local function clamp(v: number, min: number, max: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(v) then
 			error(`invalid argument #1 to 'clamp' (number expected, got {typeof(v)})`)
 		elseif not isnumber(min) then
@@ -50,7 +50,7 @@ local function clamp(v: number, min: number, max: number): number
 end
 
 local function cosh(x: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'cosh' (number expected, got {typeof(x)})`)
 		end
@@ -67,7 +67,7 @@ local function cosh(x: number): number
 end
 
 local function sinh(x: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'sinh' (number expected, got {typeof(x)})`)
 		end
@@ -98,7 +98,7 @@ local function sinh(x: number): number
 end
 
 local function tanh(x: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'tanh' (number expected, got {typeof(x)})`)
 		end
@@ -129,7 +129,7 @@ local function tanh(x: number): number
 end
 
 local function pow(a: number, b: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(a) then
 			error(`invalid argument #1 to 'pow' (number expected, got {typeof(a)})`)
 		elseif not isnumber(b) then
@@ -140,7 +140,7 @@ local function pow(a: number, b: number): number
 end
 
 local function frexp(x: number): (number, number)
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'frexp' (number expected, got {typeof(x)})`)
 		end
@@ -161,7 +161,7 @@ local function frexp(x: number): (number, number)
 end
 
 local function ldexp(x: number, e: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'ldexp' (number expected, got {typeof(x)})`)
 		elseif not isnumber(e) then
@@ -172,7 +172,7 @@ local function ldexp(x: number, e: number): number
 end
 
 local function log10(x): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
 			error(`invalid argument #1 to 'log10' (number expected, got {typeof(x)})`)
 		end
@@ -181,7 +181,7 @@ local function log10(x): number
 end
 
 local function round(n: number): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(n) then
 			error(`invalid argument #1 to 'round' (number expected, got {typeof(n)})`)
 		end
@@ -190,7 +190,7 @@ local function round(n: number): number
 end
 
 local function sign(n): number
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if not isnumber(n) then
 			error(`invalid argument #1 to 'sign' (number expected, got {typeof(n)})`)
 		end

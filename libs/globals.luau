@@ -31,7 +31,7 @@ local function dal_typeof(value: any): string
 end
 
 local function dal_rawget(t: {}, k: any): any
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'rawget' (table expected, got {dal_typeof(t)})`)
 		end
@@ -43,7 +43,7 @@ local function dal_rawget(t: {}, k: any): any
 end
 
 local function dal_rawset(t: {}, k: any, v: any): ()
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'rawset' (table expected, got {dal_typeof(t)})`)
 		end
@@ -56,7 +56,7 @@ local function dal_rawset(t: {}, k: any, v: any): ()
 end
 
 local function dal_next(t: {}, i)
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'next' (table expected, got {dal_typeof(t)})`)
 		end
@@ -67,7 +67,7 @@ end
 local unpack = table.unpack
 
 local dal_unpack: any
-if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+if _G.DAL_runtime_type_checking then
 	dal_unpack = function(tbl: {}, f: number?, t: number?)
 		if dal_typeof(tbl) ~= "table" then
 			error(`invalid argument #1 to 'unpack' (table expected, got {dal_typeof(tbl)})`)
@@ -79,9 +79,9 @@ else
 end
 
 local dal_pairs
-if _G.__DAL_HASHED_PAIRS__ then
+if _G.DAL_hash_pairs then
 	dal_pairs = function(t: {})
-		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if _G.DAL_runtime_type_checking then
 			if dal_typeof(t) ~= "table" then
 				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
 			end
@@ -123,7 +123,7 @@ if _G.__DAL_HASHED_PAIRS__ then
 	end
 else
 	dal_pairs = function(t: {})
-		if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+		if _G.DAL_runtime_type_checking then
 			if dal_typeof(t) ~= "table" then
 				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
 			end
@@ -137,7 +137,7 @@ else
 end
 
 local function dal_ipairs(t: {})
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'ipairs' (table expected, got {dal_typeof(t)})`)
 		end
@@ -173,7 +173,7 @@ local function __DAL_INTERNAL_getmetatable(value)
 end
 
 local function dal_setmetatable(tbl: {}, mt: { [any]: any } | nil)
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if dal_typeof(tbl) ~= "table" then
 			error(`invalid argument #1 to 'setmetatable' (table expected, got {dal_typeof(tbl)})`)
 		elseif dal_typeof(mt) ~= "table" and mt ~= nil then
@@ -289,7 +289,7 @@ end
 nativetypes[userdata] = "userdata"
 
 local function dal_newproxy(mt: boolean?)
-	if _G.__DAL_RUNTIME_TYPE_CHECKING__ then
+	if _G.DAL_runtime_type_checking then
 		if mt and type(mt) ~= "boolean" then
 			error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
 		end

@@ -1,0 +1,15 @@
+libs = "libs.luau"
+
+[defaults]
+runtime_type_checking = true
+hash_pairs = true
+allow_debug_library_usage = false
+
+bit32 = true
+buffer = true
+debug = true
+globals = true
+math = true
+os = true
+string = true
+table = true
