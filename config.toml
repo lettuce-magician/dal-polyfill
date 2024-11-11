@@ -1,10 +1,11 @@
-libs = "libs.luau"
+input = "libs.luau"
 
-[defaults]
+[settings]
 runtime_type_checking = true
 hash_pairs = true
 allow_debug_library_usage = false
 
+[libraries]
 bit32 = true
 buffer = true
 debug = true
