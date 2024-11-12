@@ -3,6 +3,8 @@ declare _G: {
 	DAL_runtime_type_checking: boolean,
 	DAL_hash_pairs: boolean,
 	DAL_allow_debug_library_usage: boolean,
+	DAL_emulate_frozen_table: boolean,
+	DAL_emulate_newproxy: boolean,
 
 	-- libraries
 	DAL_bit32: boolean,

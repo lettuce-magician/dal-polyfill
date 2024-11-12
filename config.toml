@@ -1,9 +1,12 @@
 input = "libs.luau"
+removes = ["io", "module", "package", "dofile", "loadfile", "_ENV"]
 
 [settings]
 runtime_type_checking = true
 hash_pairs = true
 allow_debug_library_usage = false
+emulate_frozen_table = true
+emulate_newproxy = true
 
 [libraries]
 bit32 = true

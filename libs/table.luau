@@ -140,30 +140,35 @@ local function freeze(t: typeof(setmetatable({} :: {}, {} :: {})))
 			error(`invalid argument #1 to 'freeze' (table expected, got {typeof(t)})`)
 		end
 	end
-	local mt = getmetatable(t)
-	local freezeMt
-	if mt then
-		freezeMt = clone(FrozenTable)
-		for method, f in mt do
-			if method ~= "__newindex" then
-				freezeMt[method] = f
+	if _G.DAL_emulate_frozen_table then
+		local mt = getmetatable(t)
+		local freezeMt
+		if mt then
+			freezeMt = clone(FrozenTable)
+			for method, f in mt do
+				if method ~= "__newindex" then
+					freezeMt[method] = f
+				end
 			end
+		else
+			freezeMt = FrozenTable
 		end
+		local frozen = setmetatable({
+			[privatekey] = t,
+		}, freezeMt)
+
+		-- frozentables[frozen] = {
+		-- 	[1] = mt,
+		-- 	[2] = t :: any,
+		-- }
+		frozentables[frozen] = mt or false
+		-- iteratables[frozen] = t
+
+		return frozen
 	else
-		freezeMt = FrozenTable
+		frozentables[t] = false
+		return t
 	end
-	local frozen = setmetatable({
-		[privatekey] = t,
-	}, freezeMt)
-
-	-- frozentables[frozen] = {
-	-- 	[1] = mt,
-	-- 	[2] = t :: any,
-	-- }
-	frozentables[frozen] = mt or false
-	-- iteratables[frozen] = t
-
-	return frozen
 end
 
 local function isfrozen(t: {}): boolean

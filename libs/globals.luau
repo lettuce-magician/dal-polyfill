@@ -86,9 +86,11 @@ if _G.DAL_hash_pairs then
 				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
 			end
 		end
-		local frozen = frozentables[t]
-		if frozen then
-			t = frozen[privatekey]
+		if _G.DAL_emulate_frozen_table then
+			local frozen = frozentables[t]
+			if frozen then
+				t = frozen[privatekey]
+			end
 		end
 
 		local keys = {}
@@ -128,9 +130,11 @@ else
 				error(`invalid argument #1 to 'pairs' (table expected, got {dal_typeof(t)})`)
 			end
 		end
-		local frozen = frozentables[t]
-		if frozen then
-			t = frozen[privatekey]
+		if _G.DAL_emulate_frozen_table then
+			local frozen = frozentables[t]
+			if frozen then
+				t = frozen[privatekey]
+			end
 		end
 		return pairs(t) :: any
 	end
@@ -142,27 +146,56 @@ local function dal_ipairs(t: {})
 			error(`invalid argument #1 to 'ipairs' (table expected, got {dal_typeof(t)})`)
 		end
 	end
-	local frozen = frozentables[t]
-	if frozen then
-		t = frozen[privatekey]
+	if _G.DAL_emulate_frozen_table then
+		local frozen = frozentables[t]
+		if frozen then
+			t = frozen[privatekey]
+		end
 	end
 	return ipairs(t)
 end
 
 local proxyMetatables = {}
-local function dal_getmetatable(value): any
-	local frozen = frozentables[value]
-	if frozen then
-		return frozen[1]
+local dal_getmetatable
+if _G.DAL_emulate_frozen_table and _G.DAL_emulate_newproxy then
+	dal_getmetatable = function(value): any
+		local frozen = frozentables[value]
+		if frozen then
+			return frozen[1]
+		end
+		local mt = proxies[value] or getmetatable(value)
+		if nativetypes[mt] or proxyMetatables[value] then
+			return nil
+		end
+		return mt
 	end
-	local mt = proxies[value] or getmetatable(value)
-	if nativetypes[mt] or proxyMetatables[value] then
-		return nil
+elseif _G.DAL_emulate_frozen_table then
+	dal_getmetatable = function(value): any
+		local frozen = frozentables[value]
+		if frozen then
+			return frozen[1]
+		end
+		return getmetatable(value)
 	end
-	return mt
+elseif _G.DAL_emulate_newproxy then
+	dal_getmetatable = function(value): any
+		local mt = proxies[value] or getmetatable(value)
+		if nativetypes[mt] or proxyMetatables[value] then
+			return nil
+		end
+		return getmetatable(value)
+	end
+else
+	dal_getmetatable = function(value): any
+		local mt = getmetatable(value)
+		if nativetypes[mt] then
+			return nil
+		end
+		return mt
+	end
 end
 
-local function __DAL_INTERNAL_getmetatable(value)
+local function __DAL_getmetatable_iter(value)
 	local iterMethod = lockedtables[value]
 	if iterMethod then
 		return {
@@ -288,34 +321,53 @@ end
 
 nativetypes[userdata] = "userdata"
 
-local function dal_newproxy(mt: boolean?)
-	if _G.DAL_runtime_type_checking then
-		if mt and type(mt) ~= "boolean" then
-			error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
+local dal_newproxy
+if _G.DAL_emulate_newproxy then
+	dal_newproxy = function(mt: boolean?)
+		if _G.DAL_runtime_type_checking then
+			if mt and type(mt) ~= "boolean" then
+				error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
+			end
 		end
-	end
-	local newud = {}
-	if mt then
-		-- selene: allow(manual_table_clone)
-		local proxyMt = {}
-		for i, v in pairs(userdata) do
-			proxyMt[i] = v
+		local newud = {}
+		if mt then
+			-- selene: allow(manual_table_clone)
+			local proxyMt = {}
+			for i, v in pairs(userdata) do
+				proxyMt[i] = v
+			end
+			setmetatable(newud, proxyMt)
+			local p = {
+				__newindex = function(self, k, v)
+					proxyMt[k] = v
+					rawset(self, k, v)
+				end,
+			}
+			local pt = setmetatable({}, p)
+			proxies[newud] = pt
+			proxyMetatables[pt] = p
+			weaktypes[newud] = "userdata"
+		else
+			setmetatable(newud, userdata)
 		end
-		setmetatable(newud, proxyMt)
-		local p = {
-			__newindex = function(self, k, v)
-				proxyMt[k] = v
-				rawset(self, k, v)
-			end,
-		}
-		local pt = setmetatable({}, p)
-		proxies[newud] = pt
-		proxyMetatables[pt] = p
-		weaktypes[newud] = "userdata"
-	else
-		setmetatable(newud, userdata)
+		return newud
 	end
-	return newud
+else
+	dal_newproxy = function(mt: boolean?)
+		if _G.DAL_runtime_type_checking then
+			if mt and type(mt) ~= "boolean" then
+				error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
+			end
+		end
+		local newud = {}
+		if mt then
+			setmetatable(newud, {})
+			weaktypes[newud] = "userdata"
+		else
+			setmetatable(newud, userdata)
+		end
+		return newud
+	end
 end
 
 local function dal_gcinfo(): number
@@ -389,7 +441,7 @@ return {
 	pairs = (dal_pairs :: any) :: typeof(pairs),
 	ipairs = (dal_ipairs :: any) :: typeof(ipairs),
 	getmetatable = (dal_getmetatable :: any) :: typeof(getmetatable),
-	__DAL_INTERNAL_getmetatable = (__DAL_INTERNAL_getmetatable :: any) :: typeof(getmetatable),
+	__DAL_getmetatable_iter = (__DAL_getmetatable_iter :: any) :: typeof(getmetatable),
 	setmetatable = (dal_setmetatable :: any) :: typeof(setmetatable),
 	newproxy = (dal_newproxy :: any) :: typeof(newproxy),
 	gcinfo = (dal_gcinfo :: any) :: typeof(gcinfo),
