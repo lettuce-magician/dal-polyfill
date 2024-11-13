@@ -1,0 +1,13 @@
+name = "not_for_publish/not_for_publish"
+version = "0.0.1"
+private = true
+
+[target]
+environment = "lune"
+
+[indices]
+default = "https://github.com/daimond113/pesde-index"
+
+[dev_dependencies]
+frktest = { name = "itsfrank/frktest", version = "^0.0.2" }
+base64 = { name = "synpixel/base64", version = "^3.0.0" }

@@ -1,0 +1,39 @@
+name = "not_for_publish/not_for_publish"
+version = "0.0.1"
+target = "lune"
+
+[graph."itsfrank/frktest"."0.0.2 lune"]
+direct = ["frktest", { name = "itsfrank/frktest", version = "^0.0.2" }]
+ty = "dev"
+
+[graph."itsfrank/frktest"."0.0.2 lune".target]
+environment = "lune"
+lib = "src/_pesde_init.luau"
+
+[graph."itsfrank/frktest"."0.0.2 lune".pkg_ref]
+ref_ty = "pesde"
+name = "itsfrank/frktest"
+version = "0.0.2"
+index_url = "https://github.com/daimond113/pesde-index"
+
+[graph."itsfrank/frktest"."0.0.2 lune".pkg_ref.target]
+environment = "lune"
+lib = "src/_pesde_init.luau"
+
+[graph."synpixel/base64"."3.0.0 lune"]
+direct = ["base64", { name = "synpixel/base64", version = "^3.0.0" }]
+ty = "dev"
+
+[graph."synpixel/base64"."3.0.0 lune".target]
+environment = "lune"
+lib = "lib.luau"
+
+[graph."synpixel/base64"."3.0.0 lune".pkg_ref]
+ref_ty = "pesde"
+name = "synpixel/base64"
+version = "3.0.0"
+index_url = "https://github.com/daimond113/pesde-index"
+
+[graph."synpixel/base64"."3.0.0 lune".pkg_ref.target]
+environment = "lune"
+lib = "lib.luau"
