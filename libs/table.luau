@@ -53,12 +53,10 @@ else
 	end
 end
 
-local function create(count: number, value: any)
+local function create<V>(count: number, value: V?): {V}
 	if _G.DAL_runtime_type_checking then
 		if type(count) == "number" then
 			error(`invalid argument #1 to 'create' (number expected, got {typeof(count)})`)
-		elseif typeof(value) ~= "table" then
-			error(`invalid argument #2 to 'create' (table expected, got {typeof(value)})`)
 		end
 	end
 	local new = {}
