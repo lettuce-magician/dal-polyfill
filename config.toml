@@ -1,5 +1,5 @@
 input = "libs.luau"
-removes = ["io", "module", "package", "dofile", "loadfile", "_ENV"]
+removes = ["io", "module", "package", "dofile", "loadfile"]
 
 [settings]
 runtime_type_checking = true
