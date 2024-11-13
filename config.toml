@@ -7,6 +7,7 @@ hash_pairs = true
 allow_debug_library_usage = false
 emulate_frozen_table = true
 emulate_newproxy = true
+test_bit32 = false
 
 [libraries]
 bit32 = true

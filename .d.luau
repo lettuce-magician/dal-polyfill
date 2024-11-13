@@ -5,6 +5,7 @@ declare _G: {
 	DAL_allow_debug_library_usage: boolean,
 	DAL_emulate_frozen_table: boolean,
 	DAL_emulate_newproxy: boolean,
+	DAL_test_bit32: boolean,
 
 	-- libraries
 	DAL_bit32: boolean,
