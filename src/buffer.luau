@@ -175,7 +175,7 @@ end
 function buffer.fromstring(str: string)
 	if _G.DAL_runtime_type_checking then
 		if type(str) ~= "string" then
-			error(`invalid argument #1 to 'fromstring' (string expected, got {typeof(string)})`)
+			error(`invalid argument #1 to 'fromstring' (string expected, got {typeof(str)})`)
 		end
 	end
 
