@@ -9,6 +9,11 @@ local lockedtables = require("./lockedtables")
 local isnumber = require("./isnumber")
 
 local function dal_type(value: any): string
+	if _G.DAL_runtime_type_checking then
+		if value == nil then
+			error("missing argument #1")
+		end
+	end
 	local customtype = weaktypes[value]
 	if customtype then
 		return customtype
@@ -22,6 +27,11 @@ local function dal_type(value: any): string
 end
 
 local function dal_typeof(value: any): string
+	if _G.DAL_runtime_type_checking then
+		if value == nil then
+			error("missing argument #1")
+		end
+	end
 	local mt = getmetatable(value :: any)
 	local customtype = customtypes[mt]
 	if customtype then
@@ -34,6 +44,8 @@ local function dal_rawget(t: {}, k: any): any
 	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'rawget' (table expected, got {dal_typeof(t)})`)
+		elseif k == nil then
+			error("missing argument #2")
 		end
 	end
 	if proxies[t] then
@@ -46,6 +58,10 @@ local function dal_rawset(t: {}, k: any, v: any): ()
 	if _G.DAL_runtime_type_checking then
 		if dal_typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'rawset' (table expected, got {dal_typeof(t)})`)
+		elseif k == nil then
+			error("missing argument #2")
+		elseif v == nil then
+			error("missing argument #3")
 		end
 	end
 	if proxies[t] then
@@ -64,23 +80,7 @@ local function dal_next(t: {}, i)
 	return next(t, i)
 end
 
-local unpack = table.unpack
-
-local dal_unpack: any
-if _G.DAL_runtime_type_checking then
-	dal_unpack = function(tbl: {}, f: number?, t: number?)
-		if dal_typeof(tbl) ~= "table" then
-			error(`invalid argument #1 to 'unpack' (table expected, got {dal_typeof(tbl)})`)
-		elseif f ~= nil and not isnumber(f) then
-			error(`invalid argument #2 to 'unpack' (number expected, got {dal_typeof(f)})`)
-		elseif t ~= nil and not isnumber(t) then
-			error(`invalid argument #3 to 'unpack' (number expected, got {dal_typeof(t)})`)
-		end
-		return unpack(tbl, f, t)
-	end
-else
-	dal_unpack = unpack
-end
+local dal_unpack = table.unpack
 
 local dal_pairs
 if _G.DAL_hash_pairs then
@@ -162,7 +162,12 @@ end
 local proxyMetatables = {}
 local dal_getmetatable
 if _G.DAL_emulate_frozen_table and _G.DAL_emulate_newproxy then
-	dal_getmetatable = function(value): any
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
 		local frozen = frozentables[value]
 		if frozen then
 			return frozen[1]
@@ -174,7 +179,12 @@ if _G.DAL_emulate_frozen_table and _G.DAL_emulate_newproxy then
 		return mt
 	end
 elseif _G.DAL_emulate_frozen_table then
-	dal_getmetatable = function(value): any
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
 		local frozen = frozentables[value]
 		if frozen then
 			return frozen[1]
@@ -182,7 +192,12 @@ elseif _G.DAL_emulate_frozen_table then
 		return getmetatable(value)
 	end
 elseif _G.DAL_emulate_newproxy then
-	dal_getmetatable = function(value): any
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
 		local mt = proxies[value] or getmetatable(value)
 		if nativetypes[mt] or proxyMetatables[value] then
 			return nil
@@ -190,7 +205,12 @@ elseif _G.DAL_emulate_newproxy then
 		return getmetatable(value)
 	end
 else
-	dal_getmetatable = function(value): any
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
 		local mt = getmetatable(value)
 		if nativetypes[mt] then
 			return nil
@@ -200,6 +220,11 @@ else
 end
 
 local function __DAL_getmetatable_iter(value)
+	if _G.DAL_runtime_type_checking then
+		if value == nil then
+			error("missing argument #1")
+		end
+	end
 	local iterMethod = lockedtables[value]
 	if iterMethod then
 		return {

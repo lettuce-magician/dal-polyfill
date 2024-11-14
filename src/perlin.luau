@@ -5,6 +5,7 @@
 --
 
 local floor = math.floor
+local band = bit32.band
 
 -- stylua: ignore
 local kPerlinHash = {
@@ -55,9 +56,9 @@ return function(x: number, y0: number?, z0: number?): number
 	local y = y0 or 0
 	local z = z0 or 0
 
-	local xi = bit32.band(math.floor(x), 255)
-	local yi = bit32.band(math.floor(y), 255)
-	local zi = bit32.band(math.floor(z), 255)
+	local xi = band(floor(x), 255)
+	local yi = band(floor(y), 255)
+	local zi = band(floor(z), 255)
 
 	x = x - floor(x)
 	y = y - floor(y)

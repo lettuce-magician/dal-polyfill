@@ -1,9 +1,17 @@
 local typeof = require("./globals").typeof
+local isstring = require("./isstring")
 
 local gmatch = string.gmatch
 local insert = table.insert
 
-local function split(inputstr, sep): { string }
+local function split(inputstr: string, sep: string): { string }
+	if _G.DAL_runtime_type_checking then
+		if not isstring(inputstr) then
+			error(`invalid argument #1 to 'split' (string expected, got {typeof(inputstr)})`)
+		elseif not isstring(sep) then
+			error(`invalid argument #2 to 'split' (string expected, got {typeof(sep)})`)
+		end
+	end
 	sep = sep or "%s"
 	local t = {}
 	for field, s in gmatch(inputstr, "([^" .. sep .. "]*)(" .. sep .. "?)") do

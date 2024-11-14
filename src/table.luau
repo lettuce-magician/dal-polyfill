@@ -1,5 +1,6 @@
 local typeof = require("./globals").typeof
 local lockedtables = require("./lockedtables")
+local isnumber = require("./isnumber")
 
 local function clear(t: {})
 	if _G.DAL_runtime_type_checking then
@@ -55,7 +56,7 @@ end
 
 local function create<V>(count: number, value: V?): {V}
 	if _G.DAL_runtime_type_checking then
-		if type(count) ~= "number" then
+		if not isnumber(count) then
 			error(`invalid argument #1 to 'create' (number expected, got {typeof(count)})`)
 		end
 	end
@@ -72,6 +73,8 @@ local function find(t: {}, value: any): number?
 	if _G.DAL_runtime_type_checking then
 		if typeof(t) ~= "table" then
 			error(`invalid argument #1 to 'find' (table expected, got {typeof(t)})`)
+		elseif value == nil then
+			error("missing argument #2")
 		end
 	end
 	for i, v in ipairs(t) do
