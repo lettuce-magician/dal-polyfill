@@ -1,9 +1,8 @@
-function load_tests()
-	-- tests execute in the order they are loaded
-	require("./my_tests")()
+local function loadTests()
+	require("@tests/polyfill")()
 end
 
-function run_tests()
+local function runTests()
 	local frktest = require("@frktest/")
 	local lune_console_reporter = require("@frktest/reporters/lune_console_reporter")
 
@@ -14,5 +13,5 @@ function run_tests()
 	end
 end
 
-load_tests()
-run_tests()
+loadTests()
+runTests()

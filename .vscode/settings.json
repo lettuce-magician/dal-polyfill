@@ -1,8 +1,9 @@
 {
 	"luau-lsp.require.mode": "relativeToFile",
 	"luau-lsp.require.directoryAliases": {
-		"@lune/": "~/.lune/.typedefs/0.8.8/",
-		"@frktest/": "lune_packages/.pesde/itsfrank+frktest/0.0.2/frktest/src/"
+		"@lune/": "~/.lune/.typedefs/0.8.9/",
+		"@frktest/": "lune_packages/.pesde/itsfrank+frktest/0.0.2/frktest/src/",
+		"@tests/": "tests/"
 	},
 	"luau-lsp.types.definitionFiles": [".d.luau"],
 }
