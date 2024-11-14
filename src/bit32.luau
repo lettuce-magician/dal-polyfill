@@ -61,9 +61,9 @@ end
 local function lrotate(x: number, disp: number): number
 	if _G.DAL_runtime_type_checking then
 		if not isnumber(x) then
-			error(`invalid argument #1 to 'rrotate' (number expected, got {typeof(x)})`)
+			error(`invalid argument #1 to 'lrotate' (number expected, got {typeof(x)})`)
 		elseif not isnumber(disp) then
-			error(`invalid argument #2 to 'rrotate' (number expected, got {typeof(disp)})`)
+			error(`invalid argument #2 to 'lrotate' (number expected, got {typeof(disp)})`)
 		end
 	end
 
@@ -79,7 +79,7 @@ local function replace(n: number, v: number, field: number, width: number): numb
 		elseif not isnumber(field) then
 			error(`invalid argument #3 to 'replace' (number expected, got {typeof(field)})`)
 		elseif not isnumber(width) then
-			error(`invalid argument #3 to 'replace' (number expected, got {typeof(width)})`)
+			error(`invalid argument #4 to 'replace' (number expected, got {typeof(width)})`)
 		end
 	end
 
