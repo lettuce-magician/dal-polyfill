@@ -71,6 +71,10 @@ if _G.DAL_runtime_type_checking then
 	dal_unpack = function(tbl: {}, f: number?, t: number?)
 		if dal_typeof(tbl) ~= "table" then
 			error(`invalid argument #1 to 'unpack' (table expected, got {dal_typeof(tbl)})`)
+		elseif f ~= nil and not isnumber(f) then
+			error(`invalid argument #2 to 'unpack' (number expected, got {dal_typeof(f)})`)
+		elseif t ~= nil and not isnumber(t) then
+			error(`invalid argument #3 to 'unpack' (number expected, got {dal_typeof(t)})`)
 		end
 		return unpack(tbl, f, t)
 	end
@@ -209,7 +213,7 @@ local function dal_setmetatable(tbl: {}, mt: { [any]: any } | nil)
 	if _G.DAL_runtime_type_checking then
 		if dal_typeof(tbl) ~= "table" then
 			error(`invalid argument #1 to 'setmetatable' (table expected, got {dal_typeof(tbl)})`)
-		elseif dal_typeof(mt) ~= "table" and mt ~= nil then
+		elseif mt ~= nil and dal_typeof(mt) ~= "table" then
 			error(`invalid argument #2 to 'setmetatable' (nil or table expected, got {dal_typeof(mt)})`)
 		end
 	end
@@ -234,24 +238,24 @@ end
 local userdata = {}
 
 function userdata.__index(self, k)
-	error(`attempt to index {typeof(self)} with '{k}'`)
+	error(`attempt to index {dal_typeof(self)} with '{k}'`)
 end
 
 function userdata.__newindex(self, k)
-	error(`attempt to index {typeof(self)} with '{k}'`)
+	error(`attempt to index {dal_typeof(self)} with '{k}'`)
 end
 
 function userdata.__len(self)
-	error(`attempt to get length of a {typeof(self)} value`)
+	error(`attempt to get length of a {dal_typeof(self)} value`)
 end
 
 function userdata.__call(self)
-	error(`attempt to call a {typeof(self)} value`)
+	error(`attempt to call a {dal_typeof(self)} value`)
 end
 
 local function arithmeticError(metamethod, a, b)
-	local aType = typeof(a)
-	local bType = typeof(b)
+	local aType = dal_typeof(a)
+	local bType = dal_typeof(b)
 	if aType == bType then
 		error(`attempt to perform arithmetic ({metamethod}) on {aType}`)
 	else
@@ -292,15 +296,15 @@ function userdata.__idiv(a, b)
 end
 
 function userdata.__lt(a, b)
-	error(`attempt to compare {typeof(a)} < {typeof(b)}`)
+	error(`attempt to compare {dal_typeof(a)} < {dal_typeof(b)}`)
 end
 
 function userdata.__le(a, b)
-	error(`attempt to compare {typeof(a)} <= {typeof(b)}`)
+	error(`attempt to compare {dal_typeof(a)} <= {dal_typeof(b)}`)
 end
 
 function userdata.__concat(a, b)
-	error(`attempt to concatenate {typeof(a)} with {typeof(b)}`)
+	error(`attempt to concatenate {dal_typeof(a)} with {dal_typeof(b)}`)
 end
 
 function userdata.__tostring(self)
@@ -316,7 +320,7 @@ function userdata.__tostring(self)
 end
 
 function userdata.__iter(self)
-	error(`attempt to iterate over a {typeof(self)} value`)
+	error(`attempt to iterate over a {dal_typeof(self)} value`)
 end
 
 nativetypes[userdata] = "userdata"
@@ -325,7 +329,7 @@ local dal_newproxy
 if _G.DAL_emulate_newproxy then
 	dal_newproxy = function(mt: boolean?)
 		if _G.DAL_runtime_type_checking then
-			if mt and type(mt) ~= "boolean" then
+			if mt ~= nil and type(mt) ~= "boolean" then
 				error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
 			end
 		end
@@ -355,7 +359,7 @@ if _G.DAL_emulate_newproxy then
 else
 	dal_newproxy = function(mt: boolean?)
 		if _G.DAL_runtime_type_checking then
-			if mt and type(mt) ~= "boolean" then
+			if mt ~= nil and type(mt) ~= "boolean" then
 				error(`invalid argument #1 to 'newproxy' (nil or boolean expected, got {dal_typeof(mt)})`)
 			end
 		end
@@ -386,7 +390,7 @@ local function dal_setfenv(fnOrIndex: () -> () | number, env)
 		end
 		fnOrIndex = info.func
 	elseif type(fnOrIndex) ~= "function" then
-		error(`invalid argument #1 to 'getfenv' (number expected, got {dal_typeof(fnOrIndex)})`)
+		error(`invalid argument #1 to 'setfenv' (function expected, got {dal_typeof(fnOrIndex)})`)
 	end
 	local i = 1
 	while true do
@@ -416,7 +420,7 @@ local function dal_getfenv(fnOrIndex: (() -> () | number)?)
 		end
 		fnOrIndex = info.func
 	elseif type(fnOrIndex) ~= "function" then
-		error(`invalid argument #1 to 'getfenv' (number expected, got {dal_typeof(fnOrIndex)})`)
+		error(`invalid argument #1 to 'getfenv' (function expected, got {dal_typeof(fnOrIndex)})`)
 	end
 	local i = 1
 	while true do
