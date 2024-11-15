@@ -1,13 +1,16 @@
-local buffer = {}
+-- Some implementations are inspired by https://github.com/dekkonot/bitbuffer/
 
-local privatekey = require("./privatekey")
+local buffer = {}
+local privateKey = require("./privateKey")
 local table = require("./table")
 local math = require("./math")
 local string = require("./string")
-local nativetypes = require("./nativetypes")
+local nativeTypes = require("./nativeTypes")
 local typeof = require("./globals").typeof
-local isnumber = require("./isnumber")
-local isstring = require("./isstring")
+local isNumber = require("./isNumber")
+local expectNumber = require("./expectNumber")
+local expectTable = require("./expectTable")
+local expectString = require("./expectString")
 
 local band = bit32.band
 local rshift = bit32.rshift
@@ -23,7 +26,7 @@ local huge = math.huge
 local byte = string.byte
 
 type buffer_polyfill = {
-	[typeof(privatekey)]: { number }
+	[typeof(privateKey)]: { number }
 }
 
 local chars = table.create(256)
@@ -33,20 +36,29 @@ do
 	end
 end
 
+local BufferMetatable = {}
+
+function BufferMetatable.__tostring(self: buffer_polyfill)
+	return "buffer: " .. tostring(self[privateKey]):sub(8)
+end
+
+nativeTypes[BufferMetatable] = "buffer"
+
 function buffer.create(size: number): buffer_polyfill
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(size) then
-			error(`invalid argument #1 to 'create' (number expected, got {typeof(size)})`)
-		end
+		expectNumber(size, 1, "create")
 	end
 	local data = table.create(size, 0)
-	return {
-		[privatekey] = data,
-	}
+	return setmetatable({
+		[privateKey] = data,
+	}, BufferMetatable) :: any
 end
 
 function buffer.len(b: buffer_polyfill)
-	return #b[privatekey]
+	if _G.DAL_runtime_type_checking then
+		expectTable(b, "buffer", 1, "len")
+	end
+	return #b[privateKey]
 end
 
 -- function buffer.copy(target, targetOffset, source, sourceOffset, count)
@@ -71,17 +83,31 @@ end
 --     end
 -- end
 
-function buffer.fill(b: buffer_polyfill, offset: number, value: number, count: number)
+function buffer.copy(target: buffer_polyfill, targetOffset: number, source: buffer_polyfill, sourceOffset: number?, count: number?)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'fill' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'fill' (number expected, got {typeof(value)})`)
-		elseif not isnumber(count) then
-			error(`invalid argument #3 to 'fill' (number expected, got {typeof(count)})`)
+		local funcName = "copy"
+		expectTable(target, "buffer", 1, funcName)
+		expectNumber(targetOffset, 2, funcName)
+		expectTable(source, "buffer", 3, funcName)
+		if sourceOffset ~= nil and not isNumber(sourceOffset) then
+			error(`invalid argument #4 to '{funcName}' (number expected, got {typeof(sourceOffset)})`)
+		end
+		if count ~= nil and not isNumber(count) then
+			error(`invalid argument #5 to '{funcName}' (number expected, got {typeof(count)})`)
 		end
 	end
-	local data = b[privatekey]
+	error("todo!")
+end
+
+function buffer.fill(b: buffer_polyfill, offset: number, value: number, count: number)
+	if _G.DAL_runtime_type_checking then
+		local funcName = "fill"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(value, 3, funcName)
+		expectNumber(count, 4, funcName)
+	end
+	local data = b[privateKey]
 	count = count or (#data - offset + 1)
 	value = band(value, 0xFF)
 
@@ -94,37 +120,34 @@ end
 
 function buffer.writeu8(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writeu8' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writeu8' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writeu8"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
-	b[privatekey][offset + 1] = band(value, 0xFF)
+	b[privateKey][offset + 1] = band(value, 0xFF)
 end
 
 function buffer.writeu16(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writeu16' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writeu16' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writeu16"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	data[offset + 1] = band(value, 0xFF)
 	data[offset + 2] = band(rshift(value, 8), 0xFF)
 end
 
 function buffer.writeu32(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writeu32' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writeu32' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writeu32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	data[offset + 1] = band(value, 0xFF)
 	data[offset + 2] = band(rshift(value, 8), 0xFF)
 	data[offset + 3] = band(rshift(value, 16), 0xFF)
@@ -133,30 +156,30 @@ end
 
 function buffer.readu8(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readu8' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readu8"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	return b[privatekey][offset + 1]
+	return b[privateKey][offset + 1]
 end
 
 function buffer.readu16(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readu16' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readu16"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	return bor(data[offset + 1], lshift(data[offset + 2], 8))
 end
 
 function buffer.readu32(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readu32' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readu32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	return bor(
 		bor(bor(data[offset + 1], lshift(data[offset + 2], 8)), lshift(data[offset + 3], 16)),
 		lshift(data[offset + 4], 24)
@@ -167,49 +190,46 @@ end
 
 function buffer.writei8(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writei8' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writei8' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writei8"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
 	if value < 0 then
 		value = (128 + value) + 128
 	end
 
-	b[privatekey][offset + 1] = band(value, 0xFF)
+	b[privateKey][offset + 1] = band(value, 0xFF)
 end
 
 function buffer.writei16(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writei16' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writei16' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writei16"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
 	if value < 0 then
 		value = (32768 + value) + 32768
 	end
 
-	local data = b[privatekey]
+	local data = b[privateKey]
 	data[offset + 1] = band(value, 0xFF)
 	data[offset + 2] = band(rshift(value, 8), 0xFF)
 end
 
 function buffer.writei32(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writei32' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writei32' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writei32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
 	if value < 0 then
 		value = (2147483648 + value) + 2147483648
 	end
 
-	local data = b[privatekey]
+	local data = b[privateKey]
 	data[offset + 1] = band(value, 0xFF)
 	data[offset + 2] = band(rshift(value, 8), 0xFF)
 	data[offset + 3] = band(rshift(value, 16), 0xFF)
@@ -218,11 +238,11 @@ end
 
 function buffer.readi8(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readi8' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readi8"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local value = b[privatekey][offset + 1]
+	local value = b[privateKey][offset + 1]
 	local sign = btest(value, 128)
 	value = band(value, 127)
 
@@ -235,11 +255,11 @@ end
 
 function buffer.readi16(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readi16' (number expected, got {typeof(offset)})`)
-		end
+		local  funcName = "readi16"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	local value = bor(data[offset + 1], lshift(data[offset + 2], 8))
 	local sign = btest(value, 32768)
 	value = band(value, 32767)
@@ -253,11 +273,11 @@ end
 
 function buffer.readi32(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readi32' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readi32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	local value = bor(
 		bor(bor(data[offset + 1], lshift(data[offset + 2], 8)), lshift(data[offset + 3], 16)),
 		lshift(data[offset + 4], 24)
@@ -276,17 +296,16 @@ end
 
 function buffer.writef32(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writef32' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writef32' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writef32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
 	local sign = value < 0
 	value = abs(value)
 
 	local mantissa, exponent = frexp(value)
-	local data = b[privatekey]
+	local data = b[privateKey]
 
 	if value == huge then
 		if sign then
@@ -339,17 +358,16 @@ end
 
 function buffer.writef64(b: buffer_polyfill, offset: number, value: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writef64' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(value) then
-			error(`invalid argument #2 to 'writef64' (number expected, got {typeof(value)})`)
-		end
+		local funcName = "writef64"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(offset, 3, funcName)
 	end
 	local sign = value < 0
 	value = abs(value)
 
 	local mantissa, exponent = frexp(value)
-	local data = b[privatekey]
+	local data = b[privateKey]
 
 	if value == math.huge then
 		if sign then
@@ -428,11 +446,11 @@ end
 
 function buffer.readf32(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readf32' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readf32"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	local b0 = data[offset + 1]
 	local b1 = data[offset + 2]
 	local sign = btest(b0, 128)
@@ -463,11 +481,11 @@ end
 
 function buffer.readf64(b: buffer_polyfill, offset: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readf64' (number expected, got {typeof(offset)})`)
-		end
+		local funcName = "readf64"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	local b0 = data[offset + 1]
 	local b1 = data[offset + 2]
 
@@ -508,15 +526,15 @@ end
 
 function buffer.writestring(b: buffer_polyfill, offset: number, value: string, count: number?)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'writestring' (number expected, got {typeof(offset)})`)
-		elseif not isstring(value) then
-			error(`invalid argument #2 to 'writestring' (string expected, got {typeof(value)})`)
-		elseif count ~= nil and not isnumber(count) then
-			error(`invalid argument #3 to 'writestring' (number expected, got {typeof(count)})`)
+		local funcName = "writestring"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectString(value, 3, funcName)
+		if count ~= nil and not isNumber(count) then
+			error(`invalid argument #4 to '{funcName}' (number expected, got {typeof(count)})`)
 		end
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	for i = 1, count or #value do
 		data[offset + i] = byte(value, i, i)
 	end
@@ -524,13 +542,12 @@ end
 
 function buffer.readstring(b: buffer_polyfill, offset: number, count: number)
 	if _G.DAL_runtime_type_checking then
-		if not isnumber(offset) then
-			error(`invalid argument #1 to 'readstring' (number expected, got {typeof(offset)})`)
-		elseif not isnumber(count) then
-			error(`invalid argument #2 to 'readstring' (number expected, got {typeof(count)})`)
-		end
+		local funcName = "readstring"
+		expectTable(b, "buffer", 1, funcName)
+		expectNumber(offset, 2, funcName)
+		expectNumber(count, 3, funcName)
 	end
-	local data = b[privatekey]
+	local data = b[privateKey]
 	local str = {}
 	for i = 1, count do
 		str[i] = chars[data[offset + i]]
@@ -542,7 +559,10 @@ end
 -- serdes
 
 function buffer.tostring(b: buffer_polyfill): string
-	local data = b[privatekey]
+	if _G.DAL_runtime_type_checking then
+		expectTable(b, "buffer", 1, "tostring")
+	end
+	local data = b[privateKey]
 	local t = {}
 	for i = #data, 1, -1 do
 		t[i] = chars[data[i] + 1]
@@ -552,23 +572,15 @@ end
 
 function buffer.fromstring(str: string): buffer_polyfill
 	if _G.DAL_runtime_type_checking then
-		if not isstring(str) then
-			error(`invalid argument #1 to 'fromstring' (string expected, got {typeof(str)})`)
-		end
+		expectString(str, 1, "fromstring")
 	end
 	local data = {}
 	for i = #str, 1, -1 do
 		data[i] = byte(str, i, i)
 	end
-	return {
-		[privatekey] = data
-	}
+	return setmetatable({
+		[privateKey] = data
+	}, BufferMetatable) :: any
 end
-
-function buffer.__tostring(self: buffer_polyfill)
-	return "buffer: " .. tostring(self[privatekey]):sub(8)
-end
-
-nativetypes[buffer] = "buffer"
 
 return buffer
