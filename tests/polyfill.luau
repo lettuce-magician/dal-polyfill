@@ -15,13 +15,13 @@ return function()
 	end)
 
 	test.suite("buffer", function()
-		test.case("writing integers", function()
+		test.case("integers", function()
 			local luauResult, polyfillResult = utils.execute([[
 
 			local offset = 0
 			local b = buffer.create(14)
 
-			-- unsigned
+			-- writing unsigned
 			buffer.writeu8(b, offset, 2^8-1)
 			offset += 1
 
@@ -31,7 +31,7 @@ return function()
 			buffer.writeu32(b, offset, 2^32-1)
 			offset += 4
 
-			-- signed
+			-- writing signed
 			buffer.writei8(b, offset, 2^7-1)
 			offset += 1
 
@@ -41,33 +41,32 @@ return function()
 			buffer.writei32(b, offset, 2^31-1)
 			offset += 4
 
+			-- reading unsigned
 			offset = 0
-			print(buffer.readu8(b, offset))
+			buffer.readu8(b, offset)
 			offset += 1
 
-			print(buffer.readu16(b, offset))
+			buffer.readu16(b, offset)
 			offset += 2
 
-			print(buffer.readu32(b, offset))
+			buffer.readu32(b, offset)
 			offset += 4
 
-			print(buffer.readi8(b, offset))
+			-- reading signed
+			buffer.readi8(b, offset)
 			offset += 1
 
-			print(buffer.readi16(b, offset))
+			buffer.readi16(b, offset)
 			offset += 2
 
-			print(buffer.readi32(b, offset))
+			buffer.readi32(b, offset)
 			offset += 4
 
 			return buffer.tostring(b)
 
 			]])
-			local luauResult = buffer.fromstring(luauResult)
-			local polyfillResult = buffer.fromstring(polyfillResult)
-			print(buffer.len(luauResult), buffer.len(polyfillResult))
 
-			check.equal(buffer.tostring(utils.encodeBase64(luauResult)), buffer.tostring(utils.encodeBase64(polyfillResult)))
+			check.equal(luauResult, polyfillResult)
 		end)
 	end)
 end

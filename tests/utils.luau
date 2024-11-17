@@ -3,11 +3,6 @@ local utils = {}
 local luau = require("@lune/luau")
 local fs = require("@lune/fs")
 local serde = require("@lune/serde")
-local base64 = require("../lune_packages/base64")
-
-function utils.encodeBase64(b: buffer): buffer
-    return base64.encode(b)
-end
 
 function utils.executePolyfill(code: string)
 	local config: { libraries: { [string]: boolean } } = serde.decode("toml", fs.readFile("config.toml"))
