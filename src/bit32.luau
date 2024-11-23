@@ -3,11 +3,44 @@ local isnumber = require("./isnumber")
 local LN2 = math.log(2)
 local log = math.log
 local floor = math.floor
-local band = bit32.band
-local rshift = bit32.rshift
-local lshift = bit32.lshift
-local bnot = bit32.bnot
-local bor = bit32.bor
+
+local function bnot(a: number) 
+	return (-1 - a) % (2^32)
+end
+
+local function bor(a : number, b : number)
+	local r:number, m:number, s:number = 0, 2^31, a+b+2^31
+	repeat
+	   s,a,b = a+b+m, a%m, b%m
+	   r,m = r + m*1%(s-a-b), m/2
+	until m < 1
+	return r
+ end
+ 
+local function lshift(a: number, b: number)
+    return a * 2 ^ b
+end
+
+local function rshift(a: number, b: number)
+    return math.floor(a / 2 ^ b)
+end
+
+local function band(a, b)
+    local result = 0
+    local bit = 1
+
+    while a > 0 and b > 0 do
+        if a % 2 == 1 and b % 2 == 1 then
+            result = result + bit
+        end
+
+        a = math.floor(a / 2)
+        b = math.floor(b / 2)
+        bit = bit * 2
+    end
+
+    return result
+end
 
 local function arshift(x: number, disp: number): number
 	if _G.DAL_runtime_type_checking then
@@ -134,13 +167,17 @@ local function byteswap(n: number): number
 	return bor(bor(bor(lshift(n, 24), band(lshift(n, 8), 0xff0000)), band(rshift(n, 8), 0xff00)), rshift(n, 24))
 end
 
-return (not _G.DAL_test_bit32 and bit32)
-	or {
-		arshift = arshift,
-		extract = extract,
-		lrotate = lrotate,
-		replace = replace,
-		countrz = countrz,
-		countlz = countlz,
-		byteswap = byteswap,
-	} -- for lua54 or something
+return {
+    bor = bor,
+    bnot = bnot,
+    band = band,
+    lshift = lshift,
+    rshift = rshift,
+	arshift = arshift,
+	extract = extract,
+	lrotate = lrotate,
+	replace = replace,
+	countrz = countrz,
+	countlz = countlz,
+	byteswap = byteswap,
+}

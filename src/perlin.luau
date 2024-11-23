@@ -3,6 +3,7 @@
     http://flafla2.github.io/2014/08/09/perlinnoise.html
 ]]
 --
+local bit32 = require("./bit32")
 
 local floor = math.floor
 local band = bit32.band

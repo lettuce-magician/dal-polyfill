@@ -1,3 +1,4 @@
+local bit32 = require("./bit32")
 local byte = string.byte
 local band = bit32.band
 
