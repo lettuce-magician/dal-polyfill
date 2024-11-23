@@ -11,6 +11,7 @@ local isNumber = require("./isNumber")
 local expectNumber = require("./expectNumber")
 local expectTable = require("./expectTable")
 local expectString = require("./expectString")
+local bit32 = require("./bit32")
 
 local band = bit32.band
 local rshift = bit32.rshift
