@@ -6,6 +6,7 @@ declare _G: {
 	DAL_emulate_frozen_table: boolean,
 	DAL_emulate_newproxy: boolean,
 	DAL_test_bit32: boolean,
+	__DAL_getmetatable_iter: typeof(getmetatable),
 
 	-- libraries
 	DAL_bit32: boolean,

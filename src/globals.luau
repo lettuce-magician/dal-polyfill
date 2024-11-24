@@ -81,6 +81,80 @@ local function dal_next(t: {}, i)
 end
 
 local dal_unpack = table.unpack
+local proxyMetatables = {}
+local dal_getmetatable
+if _G.DAL_emulate_frozen_table and _G.DAL_emulate_newproxy then
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
+		local frozen = frozentables[value]
+		if frozen then
+			return frozen[1]
+		end
+		local mt = proxies[value] or getmetatable(value)
+		if nativetypes[mt] or proxyMetatables[value] then
+			return nil
+		end
+		return mt
+	end
+elseif _G.DAL_emulate_frozen_table then
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
+		local frozen = frozentables[value]
+		if frozen then
+			return frozen[1]
+		end
+		return getmetatable(value)
+	end
+elseif _G.DAL_emulate_newproxy then
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
+		local mt = proxies[value] or getmetatable(value)
+		if nativetypes[mt] or proxyMetatables[value] then
+			return nil
+		end
+		return getmetatable(value)
+	end
+else
+	dal_getmetatable = function(value: any): any
+		if _G.DAL_runtime_type_checking then
+			if value == nil then
+				error("missing argument #1")
+			end
+		end
+		local mt = getmetatable(value)
+		if nativetypes[mt] then
+			return nil
+		end
+		return mt
+	end
+end
+
+function __DAL_getmetatable_iter(value)
+	if _G.DAL_runtime_type_checking then
+		if value == nil then
+			error("missing argument #1")
+		end
+	end
+	local iterMethod = lockedtables[value]
+	if iterMethod then
+		return {
+			__iter = iterMethod,
+		}
+	end
+	return dal_getmetatable(value)
+end
 
 local dal_pairs
 if _G.DAL_hash_pairs then
@@ -159,80 +233,6 @@ local function dal_ipairs(t: {})
 	return ipairs(t)
 end
 
-local proxyMetatables = {}
-local dal_getmetatable
-if _G.DAL_emulate_frozen_table and _G.DAL_emulate_newproxy then
-	dal_getmetatable = function(value: any): any
-		if _G.DAL_runtime_type_checking then
-			if value == nil then
-				error("missing argument #1")
-			end
-		end
-		local frozen = frozentables[value]
-		if frozen then
-			return frozen[1]
-		end
-		local mt = proxies[value] or getmetatable(value)
-		if nativetypes[mt] or proxyMetatables[value] then
-			return nil
-		end
-		return mt
-	end
-elseif _G.DAL_emulate_frozen_table then
-	dal_getmetatable = function(value: any): any
-		if _G.DAL_runtime_type_checking then
-			if value == nil then
-				error("missing argument #1")
-			end
-		end
-		local frozen = frozentables[value]
-		if frozen then
-			return frozen[1]
-		end
-		return getmetatable(value)
-	end
-elseif _G.DAL_emulate_newproxy then
-	dal_getmetatable = function(value: any): any
-		if _G.DAL_runtime_type_checking then
-			if value == nil then
-				error("missing argument #1")
-			end
-		end
-		local mt = proxies[value] or getmetatable(value)
-		if nativetypes[mt] or proxyMetatables[value] then
-			return nil
-		end
-		return getmetatable(value)
-	end
-else
-	dal_getmetatable = function(value: any): any
-		if _G.DAL_runtime_type_checking then
-			if value == nil then
-				error("missing argument #1")
-			end
-		end
-		local mt = getmetatable(value)
-		if nativetypes[mt] then
-			return nil
-		end
-		return mt
-	end
-end
-
-local function __DAL_getmetatable_iter(value)
-	if _G.DAL_runtime_type_checking then
-		if value == nil then
-			error("missing argument #1")
-		end
-	end
-	local iterMethod = lockedtables[value]
-	if iterMethod then
-		return {
-			__iter = iterMethod,
-		}
-	end
-	return dal_getmetatable(value)
-end
 
 local function dal_setmetatable(tbl: {}, mt: { [any]: any } | nil)
 	if _G.DAL_runtime_type_checking then
@@ -459,6 +459,7 @@ local function dal_getfenv(fnOrIndex: (() -> () | number)?)
 	end
 	return
 end
+_G.__DAL_getmetatable_iter = (__DAL_getmetatable_iter) :: typeof(getmetatable)
 
 return {
 	type = (dal_type :: any) :: typeof(type),
@@ -470,7 +471,7 @@ return {
 	pairs = (dal_pairs :: any) :: typeof(pairs),
 	ipairs = (dal_ipairs :: any) :: typeof(ipairs),
 	getmetatable = (dal_getmetatable :: any) :: typeof(getmetatable),
-	__DAL_getmetatable_iter = (__DAL_getmetatable_iter :: any) :: typeof(getmetatable),
+	__DAL_getmetatable_iter = (__DAL_getmetatable_iter) :: typeof(getmetatable),
 	setmetatable = (dal_setmetatable :: any) :: typeof(setmetatable),
 	newproxy = (dal_newproxy :: any) :: typeof(newproxy),
 	gcinfo = (dal_gcinfo :: any) :: typeof(gcinfo),
